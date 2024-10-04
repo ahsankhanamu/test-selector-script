@@ -303,7 +303,7 @@
 
     // Create a container for the buttons
     const buttonContainer = document.createElement("div");
-    buttonContainer.classList.add("buttonContainer");
+    buttonContainer.classList.add("button-container");
 
     // Create Export Selectors button
     const exportSelectorsButton = document.createElement("button");
@@ -329,7 +329,7 @@
 
   function createSecondBar() {
     secondBar = document.createElement("div");
-    secondBar.classList.add("second-bar"); // Uses CSS for styling
+    secondBar.setAttribute("class", "second-bar button-container"); // Uses CSS for styling
 
     // Select All checkbox
     const selectAllCheckbox = document.createElement("input");
@@ -346,7 +346,10 @@
     secondBar.appendChild(settingsButton);
 
     dynamicButtonsContainer = document.createElement("div");
-    dynamicButtonsContainer.classList.add("dynamic-buttons-container"); // Uses CSS for styling
+    dynamicButtonsContainer.setAttribute(
+      "class",
+      "dynamic-buttons-container button-container"
+    ); // Uses CSS for styling
     secondBar.appendChild(dynamicButtonsContainer);
 
     popup.appendChild(secondBar);
@@ -394,6 +397,7 @@
       });
 
       const copyButton = document.createElement("button");
+      copyButton.classList.add("copy-button");
       copyButton.textContent = "Copy";
       copyButton.addEventListener("click", () => {
         const exportData = {};
@@ -409,6 +413,7 @@
       });
 
       const groupButton = document.createElement("button");
+      groupButton.classList.add("group-button");
       groupButton.textContent = "Group";
       groupButton.addEventListener("click", () => {
         const groupName = prompt("Enter Group Name:");
@@ -464,11 +469,11 @@
       });
 
       const label = document.createElement("span");
-      label.classList.add("selectorIdentifier");
+      label.classList.add("selector-identifier");
       label.textContent = identifier;
 
       const deleteButton = document.createElement("button");
-      deleteButton.classList.add("deleteButton");
+      deleteButton.classList.add("delete-row-button");
       deleteButton.textContent = "Delete";
       deleteButton.addEventListener("click", () => {
         selectedElements.delete(element);
@@ -633,6 +638,12 @@
   border-bottom-right-radius: 8px;
 }
 
+.second-bar {
+  display: flex;
+  align-items: center;
+  border-top: 1px solid #ccc;
+}
+
 /* Button container for dynamic buttons */
 .dynamic-buttons-container {
   display: flex;
@@ -640,19 +651,29 @@
   align-items: center;
   padding: 10px;
   background-color: #f9f9f9;
-  border-top: 1px solid #ccc;
-  border-bottom: 1px solid #ccc;
 }
 
 /* Delete button styling */
-.delete-button {
+.dynamic-buttons-container button {
   border: none;
-  background-color: #dc3545;
   color: white;
   cursor: pointer;
   padding: 5px;
+  margin-inline: 2px;
   border-radius: 3px;
 }
+.delete-button {
+  background-color: #dc3545;
+}
+
+.copy-button {
+  background-color: black;
+}
+
+.group-button {
+  background-color: blueviolet;
+}
+
 
 /* Settings overlay styling */
 #settings-overlay {
@@ -722,11 +743,10 @@
   border-bottom-right-radius: 8px;
 }
 
-.buttonContainer {
+.button-container {
   display: flex;
   justify-content: space-between;
   padding: 10px;
-  border-top: 1px solid #ccc;
   background-color: #f9f9f9;
 }
 
@@ -757,16 +777,7 @@
   cursor: pointer;
 }
 
-.deleteButton {
-  margin-left: 10px;
-  border: none;
-  background-color: #dc3545;
-  color: white;
-  border-radius: 3px;
-  cursor: pointer;
-}
-
-.selectorIdentifier {
+.selector-identifier {
   margin-left: 10px;
   font-size: 12px;
   white-space: nowrap;
@@ -776,6 +787,14 @@
   /* Limit the width for ellipsis to show */
 }
 
+.delete-row-button {
+  margin-left: 10px;
+  border: none;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 3px;
+  cursor: pointer;
+}
   `;
 
   function attachStyles(cssString) {
