@@ -273,6 +273,66 @@ const cssString = `
     border-radius: 3px;
     cursor: pointer;
     }
+
+    //popup action buttons
+    @media (-webkit-min-device-pixel-ratio: 1.5), (min-resolution: 144dpi) {
+    .widget-topbar-minimise-button{
+        background: url(//ssl.gstatic.com/ui/v1/icons/mail/rfr/ic_minimize_16px_2x.png);
+        background-size: 16px;
+    }
+    .widget-topbar-expand-button {
+        background-image: url(//ssl.gstatic.com/ui/v1/icons/mail/rfr/ic_open_in_full_16px_2x.png);
+        background-size: 16px;
+    }
+    .widget-topbar-unexpand-button {
+        background-image: url(//ssl.gstatic.com/ui/v1/icons/mail/rfr/ic_close_fullscreen_16px_2x.png);
+        background-size: 16px;
+    }
+    .widget-topbar-close-button {
+        background: url(//ssl.gstatic.com/ui/v1/icons/mail/rfr/ic_close_16px_2x.png);
+        background-size: 16px;
+    }
+}
+    .widget-topbar-action-buttons-container{
+        width: 60px;
+        padding: 0 12px 0 4px;
+        text-align: right;
+        white-space: nowrap;
+    }
+    .widget-topbar-action-button{
+        background: none repeat scroll 0 0 transparent;
+        border: medium none;
+        border-spacing: 0;
+        color: #26589F;
+        font-family: 'PT Sans Narrow',sans-serif;
+        font-size: 16px;
+        font-weight: normal;
+        line-height: 1.42rem;
+        list-style: none outside none;
+        margin: 0;
+        padding: 0;
+        text-align: left;
+        text-decoration: none;
+        text-indent: 0;
+        margin-left: 4px;
+        opacity: 1;
+        position: relative;
+        top: 2px;
+        width: 16px;
+        height: 16px;
+    }
+    .widget-topbar-minimise-button {
+        background: url(//ssl.gstatic.com/ui/v1/icons/mail/rfr/ic_minimize_16px_1x.png);
+    }
+    .widget-topbar-expand-button {
+        background-image: url(//ssl.gstatic.com/ui/v1/icons/mail/rfr/ic_open_in_full_16px_1x.png);
+    }
+    .widget-topbar-unexpand-button {
+        background-image: url(//ssl.gstatic.com/ui/v1/icons/mail/rfr/ic_close_fullscreen_16px_1x.png);
+    }
+    .widget-topbar-close-button {
+        background: url(//ssl.gstatic.com/ui/v1/icons/mail/rfr/ic_close_16px_1x.png);
+    }
   `;
 
 new ElementBuilder('style').addHTMLContent(cssString).appendTo(document.head);
