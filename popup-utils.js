@@ -57,53 +57,95 @@ const popupUtils = (() => {
     if (!_identifier) {
       _identifier = document.createElement("div");
       _identifier.setAttribute("id", "element_identifier");
-      _identifier.style.position = "fixed";
+      _identifier.style.position = "absolute"; // Updated to absolute for easy positioning
       _identifier.style.zIndex = 999999999;
       _identifier.style.pointerEvents = "none";
-      _identifier.style.backgroundColor = "#1d1f21";
-      _identifier.style.color = "#fff";
-      _identifier.style.padding = "5px 10px";
-      _identifier.style.borderRadius = "3px";
-      _identifier.style.boxShadow = "0 0 5px rgba(0,0,0,0.5)";
+      _identifier.style.backgroundColor = "#fff";
+      _identifier.style.color = "#333";
+      _identifier.style.padding = "10px";
+      _identifier.style.borderRadius = "5px";
+      _identifier.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)";
       _identifier.style.fontSize = "12px";
-      _identifier.style.fontFamily = "monospace";
+      _identifier.style.fontFamily = "Arial, sans-serif";
       _identifier.style.lineHeight = "1.5";
+      _identifier.style.border = "1px solid #e0e0e0";
       document.body.appendChild(_identifier);
     }
   };
 
   // Function to build a robust identifier (like in developer tools)
   const buildElementIdentifier = (element) => {
-    let identifier = `<${element.tagName.toLowerCase()}`;
+    let identifierHTML = "";
 
-    // Add the ID (if present)
-    if (element.id) {
-      identifier += ` id="${element.id}"`;
-    }
-
-    // Add the class(es) (if present)
-    if (element.classList.length > 0) {
-      identifier += ` class="${[...element.classList].join(" ")}"`;
-    }
-
-    // Add relevant attributes (like type, src, href, etc.)
-    const importantAttributes = ["type", "src", "href", "alt", "title", "name"];
-    importantAttributes.forEach((attr) => {
-      if (element.getAttribute(attr)) {
-        identifier += ` ${attr}="${element.getAttribute(attr)}"`;
-      }
-    });
-
-    // Close the tag representation
-    identifier += ">";
-
-    // Add element dimensions and position
+    // Main element identifier with tag name, class, id, and dimensions
+    const tagName = element.tagName.toLowerCase();
+    const classList = element.classList.length
+      ? `.${[...element.classList].join(".")}`
+      : "";
+    const id = element.id ? `#${element.id}` : "";
     const rect = element.getBoundingClientRect();
-    identifier += ` [${Math.round(rect.width)}x${Math.round(
-      rect.height
-    )}] at (${Math.round(rect.left)}, ${Math.round(rect.top)})`;
+    const dimensions = `${rect.width.toFixed(2)} × ${rect.height.toFixed(2)}`;
 
-    return identifier;
+    identifierHTML += `<div style="font-weight: bold; color: #0074D9;">${tagName}${id}${classList}</div>`;
+    identifierHTML += `<div>${dimensions}</div>`;
+
+    // Extracting style properties
+    const computedStyles = window.getComputedStyle(element);
+    const color = computedStyles.color;
+    const fontFamily = computedStyles.fontFamily;
+    const fontSize = computedStyles.fontSize;
+    const backgroundColor = computedStyles.backgroundColor;
+    const margin = computedStyles.margin;
+    const padding = computedStyles.padding;
+
+    identifierHTML += `<div><strong>Color</strong>: <span style="background-color: ${color}; padding: 0 5px; color: white;">${color}</span></div>`;
+    identifierHTML += `<div><strong>Font</strong>: ${fontSize} "${fontFamily}"</div>`;
+    identifierHTML += `<div><strong>Background</strong>: ${backgroundColor}</div>`;
+    identifierHTML += `<div><strong>Margin</strong>: ${margin}</div>`;
+    identifierHTML += `<div><strong>Padding</strong>: ${padding}</div>`;
+
+    // Accessibility properties
+    const role = element.getAttribute("role");
+    const accessibleName =
+      element.getAttribute("aria-label") || element.getAttribute("name");
+    const isKeyboardFocusable = computedStyles.outline !== "none";
+
+    identifierHTML += "<div><strong>ACCESSIBILITY</strong></div>";
+    if (accessibleName) identifierHTML += `<div>Name: ${accessibleName}</div>`;
+    if (role) identifierHTML += `<div>Role: ${role}</div>`;
+    identifierHTML += `<div>Keyboard-focusable: ${
+      isKeyboardFocusable ? "✔️" : "❌"
+    }</div>`;
+
+    return identifierHTML;
+  };
+
+  // Adjust the popover position based on available space
+  const adjustPopoverPosition = (element, popover) => {
+    const rect = element.getBoundingClientRect();
+    const popoverRect = popover.getBoundingClientRect();
+
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    let top = rect.top - popoverRect.height - 10; // Default to top
+    let left = rect.left;
+
+    // Check if there's enough space above, otherwise show at the bottom
+    if (top < 0) {
+      top = rect.bottom + 10; // Show below the element
+    }
+
+    // Check if the popover goes out of the viewport horizontally
+    if (left + popoverRect.width > viewportWidth) {
+      left = viewportWidth - popoverRect.width - 10; // Adjust to stay within the viewport
+    } else if (left < 0) {
+      left = 10; // Prevent overflow to the left
+    }
+
+    // Set the calculated position
+    popover.style.top = `${top + window.scrollY}px`;
+    popover.style.left = `${left + window.scrollX}px`;
   };
 
   // Set popup and identifier attributes
@@ -115,25 +157,11 @@ const popupUtils = (() => {
       throw new Error("Please select the element");
     }
 
-    // Get the bounding rectangle of the element
-    const rect = _element.getBoundingClientRect();
-
-    // Adjust the position based on the scroll offsets
-    const scrollLeft = 0;
-    const scrollTop = 0;
-
-    // Set the popup position relative to the document, accounting for scroll
-    _popup.style.left = rect.left + scrollLeft + "px";
-    _popup.style.top = rect.top + scrollTop + "px";
-    _popup.style.width = rect.width + "px";
-    _popup.style.height = rect.height + "px";
-    _popup.style.display = "block";
-
-    // Set the identifier content and position it just above the popup
+    // Build the detailed identifier content
     _identifier.innerHTML = buildElementIdentifier(_element);
-    _identifier.style.left = rect.left + scrollLeft + "px";
-    _identifier.style.top = rect.top + scrollTop - 30 + "px"; // Position above the element
-    _identifier.style.display = "block";
+
+    // Adjust the position of the identifier
+    adjustPopoverPosition(_element, _identifier);
   };
 
   // Attach the popup to the current element
