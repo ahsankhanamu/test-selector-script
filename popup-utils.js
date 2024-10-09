@@ -157,6 +157,20 @@ const popupUtils = (() => {
       throw new Error("Please select the element");
     }
 
+    // Get the bounding rectangle of the element
+    const rect = _element.getBoundingClientRect();
+
+    // Adjust the position based on the scroll offsets
+    const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+
+    // Highlighter Popup: Position around the element
+    _popup.style.left = rect.left + scrollLeft + "px";
+    _popup.style.top = rect.top + scrollTop + "px";
+    _popup.style.width = rect.width + "px";
+    _popup.style.height = rect.height + "px";
+    _popup.style.display = "block";
+
     // Build the detailed identifier content
     _identifier.innerHTML = buildElementIdentifier(_element);
 
@@ -164,11 +178,26 @@ const popupUtils = (() => {
     adjustPopoverPosition(_element, _identifier);
   };
 
-  // Attach the popup to the current element
+  // Highlighter Popup Creation
+  const createHighlighterPopup = () => {
+    const highlighter = document.createElement("div");
+    highlighter.setAttribute("id", "highlighter_popup");
+    highlighter.style.position = "absolute";
+    highlighter.style.pointerEvents = "none";
+    highlighter.style.zIndex = 999999998; // Slightly lower z-index to sit behind the identifier
+    highlighter.style.border = "2px solid #4CAF50"; // Highlight border
+    highlighter.style.background = "rgba(76, 175, 80, 0.2)"; // Semi-transparent background
+    document.body.appendChild(highlighter);
+    return highlighter;
+  };
+
+  // Attach the popup to the current element (both highlighter and identifier)
   const attachPopup = (element) => {
     _element = element;
-    _popup = document.querySelector("#highlighter_popup") || createPopup();
-    createIdentifier();
+    _popup =
+      document.querySelector("#highlighter_popup") || createHighlighterPopup();
+    _identifier =
+      document.querySelector("#element_identifier") || createIdentifier();
     setPopupAttribs();
   };
 
@@ -259,9 +288,9 @@ const popupUtils = (() => {
     window.addEventListener("scroll", throttledUpdatePopup);
     window.addEventListener("resize", throttledUpdatePopup);
 
-    document.addEventListener("DOMContentLoaded", function () {
-      updatePopup();
-    });
+    // document.addEventListener("DOMContentLoaded", function () {
+    //   updatePopup();
+    // });
   };
 
   // Add event listener for keydown to navigate through elements
