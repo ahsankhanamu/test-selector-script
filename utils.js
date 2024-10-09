@@ -81,7 +81,7 @@ const cssString = `
     background-color: #f0f0f0;
     border: 1px solid #333;
     z-index: 10000;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 10px 1px rgba(0, 0, 0, .14), 0 3px 14px 2px rgba(0, 0, 0, .12), 0 5px 5px -3px rgba(0, 0, 0, .2);
     font-family: Arial, sans-serif;
     border-radius: 8px;
     display: flex;
@@ -90,9 +90,11 @@ const cssString = `
 
     /* Popup top bar styling */
     #popup-top-bar {
-    background-color: #333;
     color: white;
-    padding: 5px 10px;
+    background-color: #f2f2f2;
+    box-shadow: 0 3px 2px -2px rgba(0, 0, 0, .1);
+    color: #041e49;
+    padding: 10px 16px;
     cursor: move;
     display: flex;
     justify-content: space-between;
@@ -113,11 +115,13 @@ const cssString = `
     }
 
     .second-bar {
+    background-color: rgba(255, 255, 255, 0.8);
     display: flex;
     justify-content: space-between;
     padding: 10px;
     align-items: center;
     border-bottom: 1px solid #ccc;
+    height: 48px;
     }
 
     /* Button container for dynamic buttons */
@@ -134,7 +138,7 @@ const cssString = `
     border: none;
     color: white;
     cursor: pointer;
-    padding: 5px;
+    padding: 4px 5px;
     margin-inline: 2px;
     border-radius: 3px;
     }
@@ -256,6 +260,7 @@ const cssString = `
     }
 
     .selector-identifier {
+    color: #747775;
     margin-left: 10px;
     font-size: 12px;
     white-space: nowrap;
@@ -275,31 +280,12 @@ const cssString = `
     }
 
     //popup action buttons
-    @media (-webkit-min-device-pixel-ratio: 1.5), (min-resolution: 144dpi) {
-    .widget-topbar-minimise-button{
-        background: url(//ssl.gstatic.com/ui/v1/icons/mail/rfr/ic_minimize_16px_2x.png);
-        background-size: 16px;
-    }
-    .widget-topbar-expand-button {
-        background-image: url(//ssl.gstatic.com/ui/v1/icons/mail/rfr/ic_open_in_full_16px_2x.png);
-        background-size: 16px;
-    }
-    .widget-topbar-unexpand-button {
-        background-image: url(//ssl.gstatic.com/ui/v1/icons/mail/rfr/ic_close_fullscreen_16px_2x.png);
-        background-size: 16px;
-    }
-    .widget-topbar-close-button {
-        background: url(//ssl.gstatic.com/ui/v1/icons/mail/rfr/ic_close_16px_2x.png);
-        background-size: 16px;
-    }
-}
     .widget-topbar-action-buttons-container{
-        width: 60px;
-        padding: 0 12px 0 4px;
+        display: flex;
         text-align: right;
         white-space: nowrap;
     }
-    .widget-topbar-action-button{
+    .widget-topbar-action-button {
         background: none repeat scroll 0 0 transparent;
         border: medium none;
         border-spacing: 0;
@@ -321,17 +307,21 @@ const cssString = `
         width: 16px;
         height: 16px;
     }
-    .widget-topbar-minimise-button {
-        background: url(//ssl.gstatic.com/ui/v1/icons/mail/rfr/ic_minimize_16px_1x.png);
+    .widget-topbar-minimise-button{
+        background: url(//ssl.gstatic.com/ui/v1/icons/mail/rfr/ic_minimize_16px_2x.png);
+        background-size: 16px;
     }
     .widget-topbar-expand-button {
-        background-image: url(//ssl.gstatic.com/ui/v1/icons/mail/rfr/ic_open_in_full_16px_1x.png);
+        background-image: url(//ssl.gstatic.com/ui/v1/icons/mail/rfr/ic_open_in_full_16px_2x.png);
+        background-size: 16px;
     }
     .widget-topbar-unexpand-button {
-        background-image: url(//ssl.gstatic.com/ui/v1/icons/mail/rfr/ic_close_fullscreen_16px_1x.png);
+        background-image: url(//ssl.gstatic.com/ui/v1/icons/mail/rfr/ic_close_fullscreen_16px_2x.png);
+        background-size: 16px;
     }
     .widget-topbar-close-button {
-        background: url(//ssl.gstatic.com/ui/v1/icons/mail/rfr/ic_close_16px_1x.png);
+        background: url(//ssl.gstatic.com/ui/v1/icons/mail/rfr/ic_close_16px_2x.png);
+        background-size: 16px;
     }
   `;
 
