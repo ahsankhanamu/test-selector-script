@@ -29,48 +29,37 @@ const popupUtils = (() => {
     return xPathContainer;
   };
 
-  // Create the popup
-  const createPopup = () => {
-    const popup = (_popup = document.createElement("div"));
-    popup.setAttribute("id", "highlighter_popup");
-    popup.setAttribute("class", "popup");
-    Object.entries({
-      boxShadow: "rgb(33, 65, 16) 0px 0px 5px",
-      position: "fixed",
-      display: "none",
-      pointerEvents: "none",
-      zIndex: 999999999,
-      opacity: 0.98,
-      transition: "0.1s",
-      borderWidth: "1px !important",
-      borderStyle: "solid !important",
-      borderColor: "rgb(4, 71, 255) !important",
-      borderImage: "initial !important",
-    }).forEach(([key, value]) => (popup.style[key] = value));
-
-    getContainer().appendChild(_popup);
-    return popup;
+  // Create the highlighter popup
+  const createHighlighterPopup = () => {
+    const highlighter = document.createElement("div");
+    highlighter.setAttribute("id", "highlighter_popup");
+    highlighter.style.position = "absolute";
+    highlighter.style.pointerEvents = "none";
+    highlighter.style.zIndex = 999999998; // Slightly lower z-index to sit behind the identifier
+    highlighter.style.border = "2px solid #4CAF50"; // Highlight border
+    highlighter.style.background = "rgba(76, 175, 80, 0.2)"; // Semi-transparent background
+    document.body.appendChild(highlighter);
+    return highlighter;
   };
 
-  // Create the element identifier
+  // Create the element identifier popover
   const createIdentifier = () => {
-    if (!_identifier) {
-      _identifier = document.createElement("div");
-      _identifier.setAttribute("id", "element_identifier");
-      _identifier.style.position = "absolute"; // Updated to absolute for easy positioning
-      _identifier.style.zIndex = 999999999;
-      _identifier.style.pointerEvents = "none";
-      _identifier.style.backgroundColor = "#fff";
-      _identifier.style.color = "#333";
-      _identifier.style.padding = "10px";
-      _identifier.style.borderRadius = "5px";
-      _identifier.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)";
-      _identifier.style.fontSize = "12px";
-      _identifier.style.fontFamily = "Arial, sans-serif";
-      _identifier.style.lineHeight = "1.5";
-      _identifier.style.border = "1px solid #e0e0e0";
-      document.body.appendChild(_identifier);
-    }
+    const identifier = document.createElement("div");
+    identifier.setAttribute("id", "element_identifier");
+    identifier.style.position = "absolute";  // Updated to absolute for easy positioning
+    identifier.style.zIndex = 999999999;
+    identifier.style.pointerEvents = "none";
+    identifier.style.backgroundColor = "#fff";
+    identifier.style.color = "#333";
+    identifier.style.padding = "10px";
+    identifier.style.borderRadius = "5px";
+    identifier.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)";
+    identifier.style.fontSize = "12px";
+    identifier.style.fontFamily = "Arial, sans-serif";
+    identifier.style.lineHeight = "1.5";
+    identifier.style.border = "1px solid #e0e0e0";
+    document.body.appendChild(identifier);
+    return identifier;
   };
 
   // Function to build a robust identifier (like in developer tools)
@@ -116,6 +105,13 @@ const popupUtils = (() => {
     identifierHTML += `<div>Keyboard-focusable: ${
       isKeyboardFocusable ? "✔️" : "❌"
     }</div>`;
+
+    // Additional ARIA attributes
+    const ariaHidden = element.getAttribute("aria-hidden");
+    const ariaExpanded = element.getAttribute("aria-expanded");
+
+    if (ariaHidden !== null) identifierHTML += `<div>aria-hidden: ${ariaHidden}</div>`;
+    if (ariaExpanded !== null) identifierHTML += `<div>aria-expanded: ${ariaExpanded}</div>`;
 
     return identifierHTML;
   };
@@ -178,19 +174,6 @@ const popupUtils = (() => {
     adjustPopoverPosition(_element, _identifier);
   };
 
-  // Highlighter Popup Creation
-  const createHighlighterPopup = () => {
-    const highlighter = document.createElement("div");
-    highlighter.setAttribute("id", "highlighter_popup");
-    highlighter.style.position = "absolute";
-    highlighter.style.pointerEvents = "none";
-    highlighter.style.zIndex = 999999998; // Slightly lower z-index to sit behind the identifier
-    highlighter.style.border = "2px solid #4CAF50"; // Highlight border
-    highlighter.style.background = "rgba(76, 175, 80, 0.2)"; // Semi-transparent background
-    document.body.appendChild(highlighter);
-    return highlighter;
-  };
-
   // Attach the popup to the current element (both highlighter and identifier)
   const attachPopup = (element) => {
     _element = element;
@@ -206,7 +189,7 @@ const popupUtils = (() => {
     setPopupAttribs();
   };
 
-  // Throttle the update function for performance optimization
+  // Throttle function with immediate execution
   const throttle = (func, limit) => {
     let lastFunc;
     let lastRan;
@@ -215,15 +198,13 @@ const popupUtils = (() => {
       const args = arguments;
       if (!lastRan) {
         func.apply(context, args);
-        lastRan = Date.now();
+        lastRan = Date.now();  // Immediate execution
       } else {
         clearTimeout(lastFunc);
         lastFunc = setTimeout(function () {
-          if (Date.now() - lastRan >= limit) {
-            func.apply(context, args);
-            lastRan = Date.now();
-          }
-        }, limit - (Date.now() - lastRan));
+          func.apply(context, args);
+          lastRan = Date.now();
+        }, limit);
       }
     };
   };
@@ -261,9 +242,12 @@ const popupUtils = (() => {
     _treeWalker.currentNode = rootElement; // Start with the element under mouse
   };
 
-  // Traverse forward using TreeWalker
+  // Traverse forward using TreeWalker with recursive checks
   const traverseForward = () => {
-    const nextNode = _treeWalker.nextNode();
+    let nextNode = _treeWalker.nextNode();
+    while (nextNode && !isValidElement(nextNode)) {
+      nextNode = _treeWalker.nextNode();
+    }
     if (nextNode) {
       attachPopup(nextNode);
     } else {
@@ -271,9 +255,12 @@ const popupUtils = (() => {
     }
   };
 
-  // Traverse backward using TreeWalker
+  // Traverse backward using TreeWalker with recursive checks
   const traverseBackward = () => {
-    const prevNode = _treeWalker.previousNode();
+    let prevNode = _treeWalker.previousNode();
+    while (prevNode && !isValidElement(prevNode)) {
+      prevNode = _treeWalker.previousNode();
+    }
     if (prevNode) {
       attachPopup(prevNode);
     } else {
@@ -281,17 +268,25 @@ const popupUtils = (() => {
     }
   };
 
+  // Check if the element is valid
+  const isValidElement = (element) => {
+    return element && element.nodeType === Node.ELEMENT_NODE;
+  };
+
   // Initialize the popup update on scroll or resize
   const init = () => {
     const throttledUpdatePopup = throttle(updatePopup, 100);
-
     window.addEventListener("scroll", throttledUpdatePopup);
     window.addEventListener("resize", throttledUpdatePopup);
-
-    // document.addEventListener("DOMContentLoaded", function () {
-    //   updatePopup();
-    // });
   };
+
+  // Throttle the mouseover event to prevent excessive updates
+  const throttleMouseover = throttle((e) => {
+    e.preventDefault();
+    popupUtils.attachPopup(e.target);
+    popupUtils.init();
+    popupUtils.initTreeWalker(e.target);
+  }, 100);
 
   // Add event listener for keydown to navigate through elements
   document.addEventListener("keydown", (e) => {
@@ -321,7 +316,6 @@ const popupUtils = (() => {
 
 // Mouseover event to highlight elements and show popup
 document.addEventListener("mouseover", (e) => {
-  e.preventDefault();
   popupUtils.attachPopup(e.target);
   popupUtils.init();
   popupUtils.initTreeWalker(e.target); // Initialize TreeWalker with the hovered element as the root
