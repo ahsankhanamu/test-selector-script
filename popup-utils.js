@@ -21,47 +21,47 @@ const popupUtils = (() => {
 
   // Create the highlighter popup
   const createHighlighterPopup = () => {
-    const highlighter = document.createElement("div");
-    highlighter.setAttribute("id", "highlighter_popup");
-    highlighter.style.position = "absolute";
-    highlighter.style.pointerEvents = "none";
+    const highlighter = document.createElement('div');
+    highlighter.setAttribute('id', 'highlighter_popup');
+    highlighter.style.position = 'absolute';
+    highlighter.style.pointerEvents = 'none';
     highlighter.style.zIndex = 999999998; // Slightly lower z-index to sit behind the identifier
-    highlighter.style.border = "2px solid #4CAF50"; // Highlight border
-    highlighter.style.background = "rgba(76, 175, 80, 0.2)"; // Semi-transparent background
-    highlighter.style.opacity = "1"; // Ensure it's visible when created
+    highlighter.style.border = '2px solid #4CAF50'; // Highlight border
+    highlighter.style.background = 'rgba(76, 175, 80, 0.2)'; // Semi-transparent background
+    highlighter.style.opacity = '1'; // Ensure it's visible when created
     document.body.appendChild(highlighter);
     return highlighter;
   };
 
   // Create the element identifier popup with a tooltip arrow
   const createIdentifier = () => {
-    const identifier = document.createElement("div");
-    identifier.setAttribute("id", "element_identifier");
-    identifier.style.position = "absolute"; // Updated to absolute for easy positioning
+    const identifier = document.createElement('div');
+    identifier.setAttribute('id', 'element_identifier');
+    identifier.style.position = 'absolute'; // Updated to absolute for easy positioning
     identifier.style.zIndex = 999999999;
-    identifier.style.pointerEvents = "none";
-    identifier.style.backgroundColor = "#fff";
-    identifier.style.color = "#333";
-    identifier.style.padding = "12px";
-    identifier.style.borderRadius = "6px";
-    identifier.style.boxShadow = "0 6px 20px rgba(0, 0, 0, 0.25)";
-    identifier.style.fontSize = "12px";
-    identifier.style.lineHeight = "1.5";
-    identifier.style.border = "1px solid #ccc";
-    identifier.style.transition = "all 0.3s ease";
-    identifier.style.fontFamily = "Arial, sans-serif";
+    identifier.style.pointerEvents = 'none';
+    identifier.style.backgroundColor = '#fff';
+    identifier.style.color = '#333';
+    identifier.style.padding = '12px';
+    identifier.style.borderRadius = '6px';
+    identifier.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.25)';
+    identifier.style.fontSize = '12px';
+    identifier.style.lineHeight = '1.5';
+    identifier.style.border = '1px solid #ccc';
+    identifier.style.transition = 'all 0.3s ease';
+    identifier.style.fontFamily = 'Arial, sans-serif';
 
     // Add tooltip arrow
-    const arrow = document.createElement("div");
-    arrow.style.position = "absolute";
-    arrow.style.width = "0";
-    arrow.style.height = "0";
-    arrow.style.borderLeft = "10px solid transparent";
-    arrow.style.borderRight = "10px solid transparent";
-    arrow.style.borderTop = "10px solid #fff"; // Arrow color
-    arrow.style.bottom = "-10px"; // Adjust position for arrow
-    arrow.style.left = "50%";
-    arrow.style.transform = "translateX(-50%)";
+    const arrow = document.createElement('div');
+    arrow.style.position = 'absolute';
+    arrow.style.width = '0';
+    arrow.style.height = '0';
+    arrow.style.borderLeft = '10px solid transparent';
+    arrow.style.borderRight = '10px solid transparent';
+    arrow.style.borderTop = '10px solid #fff'; // Arrow color
+    arrow.style.bottom = '-10px'; // Adjust position for arrow
+    arrow.style.left = '50%';
+    arrow.style.transform = 'translateX(-50%)';
     identifier.appendChild(arrow);
 
     document.body.appendChild(identifier);
@@ -70,14 +70,12 @@ const popupUtils = (() => {
 
   // Function to build the identifier content (with additional accessibility checks)
   const buildElementIdentifier = (element) => {
-    let identifierHTML = "";
+    let identifierHTML = '';
 
     // Main element identifier with tag name, class, id, and dimensions
     const tagName = element.tagName.toLowerCase();
-    const classList = element.classList.length
-      ? `.${[...element.classList].join(".")}`
-      : "";
-    const id = element.id ? `#${element.id}` : "";
+    const classList = element.classList.length ? `.${[...element.classList].join('.')}` : '';
+    const id = element.id ? `#${element.id}` : '';
     const rect = calculateBoundingRect(element);
     const dimensions = `${rect.width.toFixed(2)} × ${rect.height.toFixed(2)}`;
 
@@ -102,18 +100,16 @@ const popupUtils = (() => {
     identifierHTML += `<div><strong>Padding:</strong> ${padding}</div>`;
 
     // Add accessibility properties
-    const role = element.getAttribute("role");
-    const accessibleName =
-      element.getAttribute("aria-label") || element.getAttribute("name");
-    const ariaExpanded = element.getAttribute("aria-expanded");
-    const ariaHidden = element.getAttribute("aria-hidden");
-    const ariaChecked = element.getAttribute("aria-checked");
-    const tabindex = element.getAttribute("tabindex");
-    const ariaDisabled = element.getAttribute("aria-disabled");
+    const role = element.getAttribute('role');
+    const accessibleName = element.getAttribute('aria-label') || element.getAttribute('name');
+    const ariaExpanded = element.getAttribute('aria-expanded');
+    const ariaHidden = element.getAttribute('aria-hidden');
+    const ariaChecked = element.getAttribute('aria-checked');
+    const tabindex = element.getAttribute('tabindex');
+    const ariaDisabled = element.getAttribute('aria-disabled');
 
-    identifierHTML += "<div><strong>ACCESSIBILITY</strong></div>";
-    if (accessibleName)
-      identifierHTML += `<div><strong>Name:</strong> ${accessibleName}</div>`;
+    identifierHTML += '<div><strong>ACCESSIBILITY</strong></div>';
+    if (accessibleName) identifierHTML += `<div><strong>Name:</strong> ${accessibleName}</div>`;
     if (role) identifierHTML += `<div><strong>Role:</strong> ${role}</div>`;
     if (ariaExpanded !== null)
       identifierHTML += `<div><strong>Aria-Expanded:</strong> ${ariaExpanded}</div>`;
@@ -121,21 +117,17 @@ const popupUtils = (() => {
       identifierHTML += `<div><strong>Aria-Hidden:</strong> ${ariaHidden}</div>`;
     if (ariaChecked !== null)
       identifierHTML += `<div><strong>Aria-Checked:</strong> ${ariaChecked}</div>`;
-    if (tabindex !== null)
-      identifierHTML += `<div><strong>Tabindex:</strong> ${tabindex}</div>`;
+    if (tabindex !== null) identifierHTML += `<div><strong>Tabindex:</strong> ${tabindex}</div>`;
     if (ariaDisabled !== null)
       identifierHTML += `<div><strong>Aria-Disabled:</strong> ${ariaDisabled}</div>`;
 
     // Add element states (disabled, readonly, required)
-    const isDisabled = element.hasAttribute("disabled");
-    const isReadOnly = element.hasAttribute("readonly");
-    const isRequired = element.hasAttribute("required");
-    if (isDisabled)
-      identifierHTML += `<div><strong>Disabled:</strong> ✔️</div>`;
-    if (isReadOnly)
-      identifierHTML += `<div><strong>Readonly:</strong> ✔️</div>`;
-    if (isRequired)
-      identifierHTML += `<div><strong>Required:</strong> ✔️</div>`;
+    const isDisabled = element.hasAttribute('disabled');
+    const isReadOnly = element.hasAttribute('readonly');
+    const isRequired = element.hasAttribute('required');
+    if (isDisabled) identifierHTML += `<div><strong>Disabled:</strong> ✔️</div>`;
+    if (isReadOnly) identifierHTML += `<div><strong>Readonly:</strong> ✔️</div>`;
+    if (isRequired) identifierHTML += `<div><strong>Required:</strong> ✔️</div>`;
 
     // Display CSS Selector
     const getCSSSelector = (el) => {
@@ -143,16 +135,12 @@ const popupUtils = (() => {
       let selector = el.tagName.toLowerCase();
       if (el.className) {
         let _className =
-          element.className.baseVal !== undefined
-            ? element.className.baseVal
-            : element.className;
-        selector += `.${_className.trim().split(/\s+/).join(".")}`;
+          element.className.baseVal !== undefined ? element.className.baseVal : element.className;
+        selector += `.${_className.trim().split(/\s+/).join('.')}`;
       }
       return selector;
     };
-    identifierHTML += `<div><strong>CSS Selector:</strong> ${getCSSSelector(
-      element
-    )}</div>`;
+    identifierHTML += `<div><strong>CSS Selector:</strong> ${getCSSSelector(element)}</div>`;
 
     return identifierHTML;
   };
@@ -185,19 +173,19 @@ const popupUtils = (() => {
     popover.style.left = `${left}px`;
 
     // Handle arrow placement for the tooltip
-    const arrow = popover.querySelector("div");
+    const arrow = popover.querySelector('div');
     if (top < rect.top) {
       // If popup is below the element
-      arrow.style.borderTop = "none";
-      arrow.style.borderBottom = "10px solid #fff";
-      arrow.style.top = "-10px"; // Position arrow on the top of the popover
-      arrow.style.bottom = "";
+      arrow.style.borderTop = 'none';
+      arrow.style.borderBottom = '10px solid #fff';
+      arrow.style.top = '-10px'; // Position arrow on the top of the popover
+      arrow.style.bottom = '';
     } else {
       // If popup is above the element
-      arrow.style.borderBottom = "none";
-      arrow.style.borderTop = "10px solid #fff";
-      arrow.style.bottom = "-10px"; // Position arrow at the bottom of the popover
-      arrow.style.top = "";
+      arrow.style.borderBottom = 'none';
+      arrow.style.borderTop = '10px solid #fff';
+      arrow.style.bottom = '-10px'; // Position arrow at the bottom of the popover
+      arrow.style.top = '';
     }
   };
 
@@ -219,8 +207,8 @@ const popupUtils = (() => {
     adjustPopoverPosition(_element, _identifier);
 
     // Ensure both popups are visible
-    _popup.style.display = "block";
-    _identifier.style.display = "block";
+    _popup.style.display = 'block';
+    _identifier.style.display = 'block';
   };
 
   // Attach the popup to the current element
@@ -233,8 +221,8 @@ const popupUtils = (() => {
   const togglePopupVisibility = () => {
     popupEnabled = !popupEnabled;
     if (!popupEnabled) {
-      _popup.style.display = "none";
-      _identifier.style.display = "none";
+      _popup.style.display = 'none';
+      _identifier.style.display = 'none';
     } else {
       setPopupAttribs(); // Re-enable the popups if turned back on
     }
@@ -252,12 +240,15 @@ const popupUtils = (() => {
         lastRan = Date.now();
       } else {
         clearTimeout(lastFunc);
-        lastFunc = setTimeout(() => {
-          if (Date.now() - lastRan >= limit) {
-            func.apply(context, args);
-            lastRan = Date.now();
-          }
-        }, limit - (Date.now() - lastRan));
+        lastFunc = setTimeout(
+          () => {
+            if (Date.now() - lastRan >= limit) {
+              func.apply(context, args);
+              lastRan = Date.now();
+            }
+          },
+          limit - (Date.now() - lastRan),
+        );
       }
     };
   };
@@ -280,17 +271,12 @@ const popupUtils = (() => {
     const filter = {
       acceptNode: (node) => {
         // Skip <script>, <style>, and non-visible elements
-        if (node.tagName === "SCRIPT" || node.tagName === "STYLE") {
+        if (node.tagName === 'SCRIPT' || node.tagName === 'STYLE') {
           return NodeFilter.FILTER_REJECT;
         }
 
         const rect = node.getBoundingClientRect();
-        if (
-          rect.width > 0 &&
-          rect.height > 0 &&
-          rect.top >= 0 &&
-          rect.left >= 0
-        ) {
+        if (rect.width > 0 && rect.height > 0 && rect.top >= 0 && rect.left >= 0) {
           return NodeFilter.FILTER_ACCEPT;
         }
 
@@ -302,7 +288,7 @@ const popupUtils = (() => {
       document.body, // Set the root as document.body so it can traverse the entire document
       NodeFilter.SHOW_ELEMENT,
       filter,
-      false
+      false,
     );
 
     _treeWalker.currentNode = rootElement; // Start with the element under mouse
@@ -317,7 +303,7 @@ const popupUtils = (() => {
     if (nextNode) {
       attachPopup(nextNode);
     } else {
-      alert("Reached the last element in the DOM.");
+      alert('Reached the last element in the DOM.');
     }
   };
 
@@ -330,7 +316,7 @@ const popupUtils = (() => {
     if (prevNode) {
       attachPopup(prevNode);
     } else {
-      alert("Reached the first element in the DOM.");
+      alert('Reached the first element in the DOM.');
     }
   };
 
@@ -341,7 +327,7 @@ const popupUtils = (() => {
       _treeWalker.currentNode = parentElement;
       attachPopup(parentElement); // Attach the popup to the parent element
     } else {
-      alert("Reached the top of the DOM tree.");
+      alert('Reached the top of the DOM tree.');
     }
   };
 
@@ -352,44 +338,46 @@ const popupUtils = (() => {
       _treeWalker.currentNode = firstChild;
       attachPopup(firstChild); // Attach the popup to the first child element
     } else {
-      alert("No valid child element found.");
+      alert('No valid child element found.');
     }
   };
 
   // Add event listener for keydown to navigate through elements
-  document.addEventListener("keydown", (e) => {
+  document.addEventListener('keydown', (e) => {
     switch (e.key) {
-      case "ArrowRight":
+      case 'ArrowRight':
         traverseForward();
         break;
-      case "ArrowLeft":
+      case 'ArrowLeft':
         traverseBackward();
         break;
-      case "ArrowUp":
+      case 'ArrowUp':
         traverseUp();
         break;
-      case "ArrowDown":
+      case 'ArrowDown':
         traverseDown();
         break;
     }
   });
 
   // Handle keydown for toggling or locking popups
-  document.addEventListener("keydown", (e) => {
+  document.addEventListener('keydown', (e) => {
     // Toggle popups visibility with Ctrl+H or Cmd+H
-    if ((e.ctrlKey || e.metaKey) && e.key === "h") {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'h') {
       togglePopupVisibility();
     }
     // Lock the popup on Enter key press
-    if (e.key === "Enter" && _element) {
+    if (e.key === 'Enter' && _element) {
       popupLocked = !popupLocked;
     }
   });
 
   return {
     throttleMouseover, // Make this accessible
+    attachPopup,
+    isValidElement,
   };
 })();
 
 // Add mouseover event listener for highlighting elements and showing popups
-document.addEventListener("mouseover", popupUtils.throttleMouseover);
+// document.addEventListener('mouseover', popupUtils.throttleMouseover);
