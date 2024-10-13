@@ -1,4 +1,3 @@
-react-json-view-lite:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">Understand this warning
 class ElementBuilder {
   constructor(tagName) {
     this.element = document.createElement(tagName);
