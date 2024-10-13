@@ -855,6 +855,75 @@ const popupUtils = (() => {
     return '';
   }
 
+  function getActionType(element) {
+    if (element.tagName === 'INPUT') {
+      if (
+        element.type === 'text' ||
+        element.type === 'number' ||
+        element.type === 'email' ||
+        element.type === 'tel' ||
+        element.type === 'password' ||
+        element.type === 'search' ||
+        element.type === 'url'
+      ) {
+        return 'text'; // Action for text input
+      }
+      if (element.type === 'radio') return 'mark'; // Action for radio button
+      if (element.type === 'checkbox') return 'mark'; // Action for checkbox
+      // if (element.type === 'button' || element.type === 'submit' || element.type === 'reset') {
+      //   return 'click'; // Action for buttons
+      // }
+    }
+    // if (element.tagName === 'BUTTON') {
+    //   return 'click'; // Action for buttons
+    // }
+    if (element.tagName === 'TEXTAREA') return 'text'; // Action for textarea input
+    if (element.tagName === 'SELECT') return 'select'; // Action for select dropdown
+    return 'unknown'; // Return empty if no match found
+  }
+
+  function getElementState(element) {
+    const states = [];
+
+    // Check if the element is hidden by calculating the bounding box
+    const boundingBox = element.getBoundingClientRect();
+    const isHidden = boundingBox.width === 0 && boundingBox.height === 0;
+    if (isHidden) {
+      states.push('hidden');
+    }
+
+    // Check if the element is disabled
+    if (element.disabled) {
+      states.push('disabled');
+    }
+
+    // Check if the element is focused
+    if (document.activeElement === element) {
+      states.push('focused');
+    }
+
+    // Check if the element is "empty" (for input, textarea, or select)
+    if (
+      element.tagName === 'INPUT' ||
+      element.tagName === 'TEXTAREA' ||
+      element.tagName === 'SELECT'
+    ) {
+      if (element.value === '' || element.value === null || element.value === undefined) {
+        states.push('empty');
+      }
+    }
+
+    // Check if the element is checked (for checkboxes or radio buttons)
+    if (element.type === 'checkbox' || element.type === 'radio') {
+      if (element.checked) {
+        states.push('checked');
+      }
+    }
+
+    // Return the joined states, or "normal" if there are no special states
+    return states.length > 0 ? states.join(', ') : 'normal';
+  }
+
   function isInteractive(element) {
     return (
       element.tagName === 'A' ||
@@ -1216,11 +1285,32 @@ const popupUtils = (() => {
       .addEventListener('click', exportData)
       .appendTo(buttonContainer);
 
+    new ElementBuilder('button')
+      .addTextContent('Export Actions')
+      .addClass('exportSelectorButton')
+      .addEventListener('click', exportActions)
+      .appendTo(buttonContainer);
+
+    new ElementBuilder('button')
+      .addTextContent('Export Assertions')
+      .addClass('exportDataButton')
+      .addEventListener('click', exportAssertions)
+      .appendTo(buttonContainer);
+
     createSecondBar();
+  }
+
+  function highlightElement(element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    element.style.outline = hoverOutlineStyle;
+  }
+  function unhighlightElement(element) {
+    element.style.outline = defaultOutlineStyle;
   }
 
   function updatePopup() {
     popupContent.innerHTML = '';
+
     selectedElements.forEach((value, element) => {
       const li = new ElementBuilder('div')
         .addClass('selectorListItem')
@@ -1228,10 +1318,11 @@ const popupUtils = (() => {
         .getElement();
 
       const checkbox = new ElementBuilder('input')
-        .setAttributes({ type: 'checkbox' })
+        .setAttributes({ type: 'checkbox', checked: popupSelectedItems.has(element) })
         .addClass('popup-item-checkbox')
-        .addEventListener('change', () => {
-          if (checkbox.checked) {
+        .addEventListener('change', (e) => {
+          let checked = e.target.checked;
+          if (checked) {
             popupSelectedItems.add(element);
           } else {
             popupSelectedItems.delete(element);
@@ -1243,7 +1334,7 @@ const popupUtils = (() => {
 
       const identifier = getElementIdentifier(element);
 
-      new ElementBuilder('input')
+      const selectorNameInput = new ElementBuilder('input')
         .setAttributes({
           type: 'text',
           placeholder: 'Enter Key Name',
@@ -1274,14 +1365,11 @@ const popupUtils = (() => {
         })
         .appendTo(li);
 
-      li.addEventListener('mouseenter', () => {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        element.style.outline = hoverOutlineStyle;
-      });
+      li.addEventListener('mouseenter', () => highlightElement(element));
+      li.addEventListener('mouseleave', () => unhighlightElement(element));
 
-      li.addEventListener('mouseleave', () => {
-        element.style.outline = defaultOutlineStyle;
-      });
+      selectorNameInput.addEventListener('focus', () => highlightElement(element));
+      selectorNameInput.addEventListener('blur', () => unhighlightElement(element));
     });
   }
 
@@ -1421,38 +1509,75 @@ const popupUtils = (() => {
     console.log(exportObject);
   }
 
+  function exportElementValue(element) {
+    let value = '';
+
+    if (element.tagName === 'INPUT') {
+      if (
+        element.type === 'text' ||
+        element.type === 'email' ||
+        element.type === 'password' ||
+        element.type === 'search'
+      ) {
+        value = element.value;
+      } else if (element.type === 'checkbox' || element.type === 'radio') {
+        value = element.checked;
+      }
+    } else if (element.tagName === 'TEXTAREA') {
+      value = element.value;
+    } else if (element.tagName === 'SELECT') {
+      const selectedOption = element.options[element.selectedIndex];
+      value = selectedOption ? selectedOption.textContent : '';
+    } else if (element.tagName === 'BUTTON') {
+      value = element.textContent;
+    }
+    return value;
+  }
+
   function exportData() {
     const exportData = {};
     selectedElements.forEach((selectorName, element) => {
-      let value;
-
-      if (element.tagName === 'INPUT') {
-        if (
-          element.type === 'text' ||
-          element.type === 'email' ||
-          element.type === 'password' ||
-          element.type === 'search'
-        ) {
-          value = element.value;
-        } else if (element.type === 'checkbox' || element.type === 'radio') {
-          value = element.checked;
-        }
-      } else if (element.tagName === 'TEXTAREA') {
-        value = element.value;
-      } else if (element.tagName === 'SELECT') {
-        const selectedOption = element.options[element.selectedIndex];
-        value = selectedOption ? selectedOption.textContent : '';
-      } else if (element.tagName === 'BUTTON') {
-        value = element.textContent;
-      }
-
+      let elementValue = exportElementValue(element);
       if (selectorName) {
-        exportData[selectorName] = value;
+        exportData[selectorName] = elementValue;
       }
     });
 
     console.log('Exported Data:', exportData);
     return exportData;
+  }
+
+  function exportActions() {
+    const actions = [];
+    actions.push(`| selector | type | value |`);
+
+    selectedElements.forEach((selectorName, element) => {
+      const action = getActionType(element); // Get action type (text, mark, click, select)
+      const elementValue = exportElementValue(element); // Retrieve exported data // Get the data for this element from exported data
+
+      if (selectorName) {
+        actions.push(`| ${selectorName} | ${action} | ${elementValue} |`);
+      }
+    });
+    const joinedActions = actions.join('\n');
+    console.log(joinedActions);
+    return joinedActions; // Combine actions with line breaks
+  }
+
+  function exportAssertions() {
+    const assertions = [];
+    assertions.push(`| selector | states | value |`);
+    selectedElements.forEach((selectorName, element) => {
+      const states = getElementState(element); // Get the state of the element (hidden, disabled, focused, etc.)
+      const elementValue = exportElementValue(element); // Retrieve exported data // Get the data for this element from exported data
+
+      if (selectorName) {
+        assertions.push(`| ${selectorName} | ${states} | ${elementValue} |`);
+      }
+    });
+    let joinedAssertions = assertions.join('\n');
+    console.log(joinedAssertions);
+    return joinedAssertions; // Combine assertions with line breaks
   }
 
   function toggleSettingsOverlay() {
@@ -1542,8 +1667,3 @@ const popupUtils = (() => {
   // Initialize the widget
   initWidget();
 })();
-
-VM55162:792 Widget Activated
-VM55162:1537 Hold and drag the mouse to select interactive elements. A popup will show the selected items.
-undefined
-react-json-view-lite:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
