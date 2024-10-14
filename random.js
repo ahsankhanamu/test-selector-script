@@ -486,6 +486,7 @@ new ElementBuilder('style').addHTMLContent(cssString).appendTo(document.head);
 //   .insertAdjacent('#anotherElement', 'beforebegin');
 
 
+
 // popUtils here
 const popupUtils = (() => {
   let _element, _popup, _identifier, _treeWalker;
@@ -874,6 +875,7 @@ const popupUtils = (() => {
 
 // Add mouseover event listener for highlighting elements and showing popups
 // document.addEventListener('mouseover', popupUtils.toggleSingleSelectPopup);
+
 
 // Main widget here
 (function () {
@@ -1661,34 +1663,48 @@ const popupUtils = (() => {
   }
 
   function exportActions() {
-    const actions = [];
-    actions.push(`| selector | type | value |`);
+    let actions = [['selector', 'type', 'value']];
 
     selectedElements.forEach((selectorName, element) => {
       const action = getActionType(element); // Get action type (text, mark, click, select)
-      const elementValue = exportElementValue(element); // Retrieve exported data // Get the data for this element from exported data
+      const elementValue = exportElementValue(element); // Retrieve exported data
 
       if (selectorName) {
-        actions.push(`| ${selectorName} | ${action} | ${elementValue} |`);
+        actions.push([selectorName, action, elementValue]);
       }
     });
-    const joinedActions = actions.join('\n');
-    return joinedActions; // Combine actions with line breaks
+    const formattedTable = formatTable(actions);
+    return formattedTable; // Return string with proper newlines
   }
 
   function exportAssertions() {
-    const assertions = [];
-    assertions.push(`| selector | states | value |`);
+    let assertions = [['selector', 'states', 'value']]; // Add \n for new line
+
     selectedElements.forEach((selectorName, element) => {
-      const states = getElementState(element); // Get the state of the element (hidden, disabled, focused, etc.)
-      const elementValue = exportElementValue(element); // Retrieve exported data // Get the data for this element from exported data
+      const states = getElementState(element); // Get the state of the element
+      const elementValue = exportElementValue(element); // Retrieve exported data
 
       if (selectorName) {
-        assertions.push(`| ${selectorName} | ${states} | ${elementValue} |`);
+        assertions.push([selectorName, states, elementValue]);
       }
     });
-    let joinedAssertions = assertions.join('\n');
-    return joinedAssertions; // Combine assertions with line breaks
+    const formattedTable = formatTable(assertions);
+    return formattedTable; // Return string with proper newlines
+  }
+
+  function formatTable(rows) {
+    // Find the maximum width for each column
+    const colWidths = rows[0].map((_, colIndex) =>
+      Math.max(...rows.map((row) => row[colIndex].length)),
+    );
+
+    // Format each row to align the columns with pipes at the start and end
+    return rows
+      .map(
+        (row) =>
+          '| ' + row.map((cell, colIndex) => cell.padEnd(colWidths[colIndex])).join(' | ') + ' |',
+      )
+      .join('\n');
   }
 
   function toggleSettingsOverlay() {
@@ -1884,12 +1900,14 @@ const popupUtils = (() => {
     }
 
     // Remove escape characters from JSON when displaying
-    exportTextArea.value = JSON.stringify(data, null, 2)
-      .replace(/\\n/g, '\n') // Remove escaped newlines
-      .replace(/\\t/g, '\t') // Remove escaped tabs
-      .replace(/\\"/g, '"') // Unescape double quotes
-      .replace(/\\\\/g, '\\'); // Unescape backslashes
-
+    if (typeof data === 'object') {
+      data = JSON.stringify(data, null, 2)
+        .replace(/\\n/g, '\n') // Remove escaped newlines
+        .replace(/\\t/g, '\t') // Remove escaped tabs
+        .replace(/\\"/g, '"') // Unescape double quotes
+        .replace(/\\\\/g, '\\'); // Unescape backslashes
+    }
+    exportTextArea.value = data;
     // Auto-populate the file name based on the content type
     document.getElementById('export-filename').value = fileName;
 
