@@ -1232,6 +1232,15 @@
     );
   }
 
+  // TODO Add all type of event listeners in the widget only
+  // TODO communicate with other libs using events or message.
+  // TODO Add the icon for the dom navigation by side of drag select.
+  // TODO Add the new toll for activation and deactivation of dom navigation, refresh and more, it may even have dropdown???.
+  // TODO Add the filter option in the second toolbar.
+  // TODO Add "displayItems" Map() for items after all kind of filter operations, or pagination.
+  // TODO Modify the selectedItems to the "storeItems" Map()
+  // TODO Add a new library integration for the xpath
+
   // Initialize the widget
   initWidget();
 })();
