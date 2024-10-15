@@ -4,14 +4,14 @@ class ElementBuilder {
   }
 
   setAttributes(attributes) {
-    Object.keys(attributes).forEach((key) => {
+    Object.keys(attributes).forEach(key => {
       this.element.setAttribute(key, attributes[key]);
     });
     return this; // for chaining
   }
 
   addClass(...classNames) {
-    classNames.forEach((className) => {
+    classNames.forEach(className => {
       this.element.classList.add(...className.split(' ')); // Split by space
     });
     return this; // for chaining
@@ -28,7 +28,8 @@ class ElementBuilder {
   }
 
   appendTo(parent) {
-    if (parent instanceof HTMLElement) {
+    // Check if parent is an HTMLElement or DocumentFragment
+    if (parent instanceof HTMLElement || parent instanceof DocumentFragment) {
       parent.appendChild(this.element);
     } else if (typeof parent === 'string') {
       document.querySelector(parent).appendChild(this.element);
@@ -40,7 +41,9 @@ class ElementBuilder {
     if (target instanceof HTMLElement) {
       target.insertAdjacentElement(position, this.element);
     } else if (typeof target === 'string') {
-      document.querySelector(target).insertAdjacentElement(position, this.element);
+      document
+        .querySelector(target)
+        .insertAdjacentElement(position, this.element);
     }
     return this; // for chaining
   }
@@ -60,17 +63,6 @@ class ElementBuilder {
   }
 }
 
-// Function to download the object as a JSON file
-function downloadObjectAsJson(exportObj, exportName) {
-  const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(exportObj));
-  const downloadAnchorNode = document.createElement('a');
-  downloadAnchorNode.setAttribute('href', dataStr);
-  downloadAnchorNode.setAttribute('download', exportName + '.json');
-  document.body.appendChild(downloadAnchorNode); // required for firefox
-  downloadAnchorNode.click();
-  downloadAnchorNode.remove();
-}
-
 const cssString = `
   /* Selection box styling */
     .selection-box {
@@ -83,8 +75,8 @@ const cssString = `
       display: none;
     }
 
-    /* Popup styling */
-    #popup {
+    /* Widget styling */
+    #widget {
       position: fixed;
       bottom: 10px;
       right: 10px;
@@ -99,8 +91,8 @@ const cssString = `
       flex-direction: column;
     }
 
-    /* Popup top bar styling */
-    #popup-top-bar {
+    /* Widget top bar styling */
+    #widget-top-bar {
       color: white;
       background-color: #f2f2f2;
       box-shadow: 0 3px 2px -2px rgba(0, 0, 0, .1);
@@ -114,8 +106,8 @@ const cssString = `
       border-top-right-radius: 8px;
     }
 
-    /* Popup content area styling */
-    .popup-content {
+    /* Widget content area styling */
+    .widget-content {
       padding: 10px;
       flex-grow: 1;
       max-height: 300px;
@@ -189,7 +181,7 @@ const cssString = `
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
     }
 
-    #popup {
+    #widget {
       position: fixed;
       bottom: 10px;
       right: 10px;
@@ -224,7 +216,7 @@ const cssString = `
       font-size: 16px;
     }
 
-    .popup-content {
+    .widget-content {
       padding: 10px;
       flex-grow: 1;
       max-height: 300px;
@@ -403,7 +395,7 @@ const cssString = `
       cursor: pointer;
     }
 
-    /* popup action buttons */
+    /* widget action buttons */
     .widget-topbar-action-buttons-container {
         display: flex;
         text-align: right;
@@ -485,16 +477,17 @@ new ElementBuilder('style').addHTMLContent(cssString).appendTo(document.head);
 //   .setStyle({ color: 'blue', fontSize: '18px' })
 //   .insertAdjacent('#anotherElement', 'beforebegin');
 
-
-
-// popUtils here
-const popupUtils = (() => {
-  let _element, _popup, _identifier, _treeWalker;
+const widgetUtils = (() => {
+  let _element,
+    _popup,
+    _identifier,
+    _treeWalker,
+    callbacks = {};
   let popupEnabled = false; // To toggle popup display
   let popupLocked = false; // To lock popup on an element
 
   // Function to calculate the bounding rect of the hovered element
-  const calculateBoundingRect = (_element) => {
+  const calculateBoundingRect = _element => {
     const rect = _element.getBoundingClientRect();
     const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
     const scrollTop = window.scrollY || document.documentElement.scrollTop;
@@ -559,12 +552,14 @@ const popupUtils = (() => {
   };
 
   // Function to build the identifier content (with additional accessibility checks)
-  const buildElementIdentifier = (element) => {
+  const buildElementIdentifier = element => {
     let identifierHTML = '';
 
     // Main element identifier with tag name, class, id, and dimensions
     const tagName = element.tagName.toLowerCase();
-    const classList = element.classList.length ? `.${[...element.classList].join('.')}` : '';
+    const classList = element.classList.length
+      ? `.${[...element.classList].join('.')}`
+      : '';
     const id = element.id ? `#${element.id}` : '';
     const rect = calculateBoundingRect(element);
     const dimensions = `${rect.width.toFixed(2)} × ${rect.height.toFixed(2)}`;
@@ -591,7 +586,8 @@ const popupUtils = (() => {
 
     // Add accessibility properties
     const role = element.getAttribute('role');
-    const accessibleName = element.getAttribute('aria-label') || element.getAttribute('name');
+    const accessibleName =
+      element.getAttribute('aria-label') || element.getAttribute('name');
     const ariaExpanded = element.getAttribute('aria-expanded');
     const ariaHidden = element.getAttribute('aria-hidden');
     const ariaChecked = element.getAttribute('aria-checked');
@@ -599,7 +595,8 @@ const popupUtils = (() => {
     const ariaDisabled = element.getAttribute('aria-disabled');
 
     identifierHTML += '<div><strong>ACCESSIBILITY</strong></div>';
-    if (accessibleName) identifierHTML += `<div><strong>Name:</strong> ${accessibleName}</div>`;
+    if (accessibleName)
+      identifierHTML += `<div><strong>Name:</strong> ${accessibleName}</div>`;
     if (role) identifierHTML += `<div><strong>Role:</strong> ${role}</div>`;
     if (ariaExpanded !== null)
       identifierHTML += `<div><strong>Aria-Expanded:</strong> ${ariaExpanded}</div>`;
@@ -607,7 +604,8 @@ const popupUtils = (() => {
       identifierHTML += `<div><strong>Aria-Hidden:</strong> ${ariaHidden}</div>`;
     if (ariaChecked !== null)
       identifierHTML += `<div><strong>Aria-Checked:</strong> ${ariaChecked}</div>`;
-    if (tabindex !== null) identifierHTML += `<div><strong>Tabindex:</strong> ${tabindex}</div>`;
+    if (tabindex !== null)
+      identifierHTML += `<div><strong>Tabindex:</strong> ${tabindex}</div>`;
     if (ariaDisabled !== null)
       identifierHTML += `<div><strong>Aria-Disabled:</strong> ${ariaDisabled}</div>`;
 
@@ -615,17 +613,22 @@ const popupUtils = (() => {
     const isDisabled = element.hasAttribute('disabled');
     const isReadOnly = element.hasAttribute('readonly');
     const isRequired = element.hasAttribute('required');
-    if (isDisabled) identifierHTML += `<div><strong>Disabled:</strong> ✔️</div>`;
-    if (isReadOnly) identifierHTML += `<div><strong>Readonly:</strong> ✔️</div>`;
-    if (isRequired) identifierHTML += `<div><strong>Required:</strong> ✔️</div>`;
+    if (isDisabled)
+      identifierHTML += `<div><strong>Disabled:</strong> ✔️</div>`;
+    if (isReadOnly)
+      identifierHTML += `<div><strong>Readonly:</strong> ✔️</div>`;
+    if (isRequired)
+      identifierHTML += `<div><strong>Required:</strong> ✔️</div>`;
 
     // Display CSS Selector
-    const getCSSSelector = (el) => {
+    const getCSSSelector = el => {
       if (el.id) return `#${el.id}`;
       let selector = el.tagName.toLowerCase();
       if (el.className) {
         let _className =
-          element.className.baseVal !== undefined ? element.className.baseVal : element.className;
+          element.className.baseVal !== undefined
+            ? element.className.baseVal
+            : element.className;
         selector += `.${_className.trim().split(/\s+/).join('.')}`;
       }
       return selector;
@@ -684,6 +687,7 @@ const popupUtils = (() => {
     if (!_popup) _popup = createHighlighterPopup();
     if (!_identifier) _identifier = createIdentifier();
 
+    if (!_element) return;
     const rect = calculateBoundingRect(_element);
 
     // Position and size the highlighter popup
@@ -702,13 +706,13 @@ const popupUtils = (() => {
   };
 
   // Attach the popup to the current element
-  const attachPopup = (element) => {
+  const attachInspectPopup = element => {
     _element = element;
     setPopupAttribs();
   };
 
   // Toggle popup visibility (Ctrl+H)
-  const toggleSingleSelectPopup = () => {
+  const toggleSingleSelectTool = () => {
     popupEnabled = !popupEnabled;
     if (!popupEnabled) {
       if (_popup) {
@@ -716,8 +720,12 @@ const popupUtils = (() => {
         _identifier.style.display = 'none';
       }
       document.removeEventListener('mouseover', throttleMouseover);
+      // Handle keydown for toggling or locking popups
+      document.removeEventListener('keydown', keyDownListeners);
     } else {
       document.addEventListener('mouseover', throttleMouseover);
+      // Handle keydown for toggling or locking popups
+      document.addEventListener('keydown', keyDownListeners);
       setPopupAttribs(); // Re-enable the popups if turned back on
     }
   };
@@ -741,36 +749,43 @@ const popupUtils = (() => {
               lastRan = Date.now();
             }
           },
-          limit - (Date.now() - lastRan),
+          limit - (Date.now() - lastRan)
         );
       }
     };
   };
 
   // Throttle the mouseover event to prevent excessive updates
-  const throttleMouseover = throttle((e) => {
+  const throttleMouseover = throttle(e => {
     if (!popupLocked && popupEnabled) {
-      attachPopup(e.target);
+      attachInspectPopup(e.target);
       initTreeWalker(e.target);
     }
   }, 100);
 
   // Check if the element is valid
-  const isValidElement = (element) => {
+  const isValidElement = element => {
     return element && element.nodeType === Node.ELEMENT_NODE;
   };
 
   // Initialize TreeWalker
-  const initTreeWalker = (rootElement) => {
+  const initTreeWalker = rootElement => {
+    if (!rootElement) return;
+
     const filter = {
-      acceptNode: (node) => {
+      acceptNode: node => {
         // Skip <script>, <style>, and non-visible elements
         if (node.tagName === 'SCRIPT' || node.tagName === 'STYLE') {
           return NodeFilter.FILTER_REJECT;
         }
 
         const rect = node.getBoundingClientRect();
-        if (rect.width > 0 && rect.height > 0 && rect.top >= 0 && rect.left >= 0) {
+        if (
+          rect.width > 0 &&
+          rect.height > 0 &&
+          rect.top >= 0 &&
+          rect.left >= 0
+        ) {
           return NodeFilter.FILTER_ACCEPT;
         }
 
@@ -782,7 +797,7 @@ const popupUtils = (() => {
       document.body, // Set the root as document.body so it can traverse the entire document
       NodeFilter.SHOW_ELEMENT,
       filter,
-      false,
+      false
     );
 
     _treeWalker.currentNode = rootElement; // Start with the element under mouse
@@ -795,7 +810,7 @@ const popupUtils = (() => {
       nextNode = _treeWalker.nextNode();
     }
     if (nextNode) {
-      attachPopup(nextNode);
+      attachInspectPopup(nextNode);
     } else {
       alert('Reached the last element in the DOM.');
     }
@@ -808,7 +823,7 @@ const popupUtils = (() => {
       prevNode = _treeWalker.previousNode();
     }
     if (prevNode) {
-      attachPopup(prevNode);
+      attachInspectPopup(prevNode);
     } else {
       alert('Reached the first element in the DOM.');
     }
@@ -819,7 +834,7 @@ const popupUtils = (() => {
     const parentElement = _treeWalker.currentNode.parentElement;
     if (parentElement && isValidElement(parentElement)) {
       _treeWalker.currentNode = parentElement;
-      attachPopup(parentElement); // Attach the popup to the parent element
+      attachInspectPopup(parentElement); // Attach the popup to the parent element
     } else {
       alert('Reached the top of the DOM tree.');
     }
@@ -830,14 +845,37 @@ const popupUtils = (() => {
     const firstChild = _treeWalker.currentNode.firstElementChild;
     if (firstChild && isValidElement(firstChild)) {
       _treeWalker.currentNode = firstChild;
-      attachPopup(firstChild); // Attach the popup to the first child element
+      attachInspectPopup(firstChild); // Attach the popup to the first child element
     } else {
       alert('No valid child element found.');
     }
   };
 
-  // Add event listener for keydown to navigate through elements
-  document.addEventListener('keydown', (e) => {
+  // Handle keydown for traversing elements
+  function keyDownListeners(e) {
+    // Toggle popups visibility with Ctrl+H or Cmd+H
+    if ((e.ctrlKey || e.metaKey) && e.key === 'h') {
+      toggleSingleSelectTool();
+    }
+
+    // Lock the popup on Enter key press
+    if ((e.ctrlKey || e.metaKey) && e.key === 'l' && _element) {
+      popupLocked = !popupLocked;
+    }
+
+    if (e.key === 'Escape') {
+      // Example: Hide popup on Escape key press
+      toggleSingleSelectTool();
+    }
+
+    // Add the element to selected on Enter key press
+    if (e.key === 'Enter' && _element) {
+      if (typeof callbacks['enterKeyCallback'] === 'function' && _element) {
+        callbacks['enterKeyCallback'](_element);
+      }
+    }
+
+    // Add keydown handler to navigate through elements
     switch (e.key) {
       case 'ArrowRight':
         traverseForward();
@@ -852,44 +890,41 @@ const popupUtils = (() => {
         traverseDown();
         break;
     }
-  });
+  }
 
-  // Handle keydown for toggling or locking popups
-  document.addEventListener('keydown', (e) => {
-    // Toggle popups visibility with Ctrl+H or Cmd+H
-    if ((e.ctrlKey || e.metaKey) && e.key === 'h') {
-      toggleSingleSelectPopup();
-    }
-    // Lock the popup on Enter key press
-    if (e.key === 'Enter' && _element) {
-      popupLocked = !popupLocked;
-    }
-  });
-
+  function setCallbacks(callback) {
+    callbacks = { callbacks, ...callback };
+  }
+  console.log('popupUtils');
   return {
-    attachPopup,
+    attachInspectPopup,
     isValidElement,
-    toggleSingleSelectPopup,
+    toggleSingleSelectTool,
+    setCallbacks,
   };
 })();
 
 // Add mouseover event listener for highlighting elements and showing popups
-// document.addEventListener('mouseover', popupUtils.toggleSingleSelectPopup);
-
+// document.addEventListener('mouseover', popupUtils.toggleSingleSelectTool);
 
 // Main widget here
 (function () {
   let startX, startY, selectionBox;
   let selectedElements = new Map();
-  let popupSelectedItems = new Set();
-  let popup, popupTopBar, secondBar, popupContent, exportOverlay;
+  let widgetSelectedItems = new Set();
+  let widget,
+    widgetTopBar,
+    secondBar,
+    widgetContent,
+    widgetContentFragment,
+    exportOverlay;
   (isMinimized = false), (isMaximized = false);
-  let isDraggingPopup = false;
+  let isDraggingWidget = false;
   let isDraggingSelection = false;
   let scrollSpeed = 20;
   let scrollInterval;
-  let popupOffsetX = 0,
-    popupOffsetY = 0;
+  let widgetOffsetX = 0,
+    widgetOffsetY = 0;
   let dynamicButtonsContainer;
   let isWidgetActive = false;
   let tool = '';
@@ -897,176 +932,74 @@ const popupUtils = (() => {
   const defaultOutlineStyle = '2px solid blue';
   const hoverOutlineStyle = '3px dashed orange';
 
+  class ToolManager {
+    constructor() {
+      this.currentTool = null;
+    }
+
+    activateTool(toolName) {
+      if (this.currentTool) {
+        this.deactivateTool(this.currentTool);
+      }
+      this.currentTool = toolName;
+      this.activateToolHandlers(toolName);
+    }
+
+    deactivateTool(toolName) {
+      this.deactivateToolHandlers(toolName);
+      this.currentTool = null;
+    }
+
+    activateToolHandlers(toolName) {
+      switch (toolName) {
+        case 'singleSelect':
+          window.addEventListener('click', handleSingleSelect);
+          widgetUtils.setCallbacks({
+            enterKeyCallback: addSingleElementToSelection,
+          });
+          widgetUtils.toggleSingleSelectTool();
+          break;
+        case 'dragSelect':
+          window.addEventListener('mousedown', onDragSelectionStart);
+          break;
+        default:
+          break;
+      }
+    }
+
+    deactivateToolHandlers(toolName) {
+      switch (toolName) {
+        case 'singleSelect':
+          window.removeEventListener('click', handleSingleSelect);
+          widgetUtils.toggleSingleSelectTool();
+          break;
+        case 'dragSelect':
+          window.removeEventListener('mousedown', onDragSelectionStart);
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  const toolManager = new ToolManager();
+
   // Toggle widget activation and deactivation
   function toggleWidgetActivation() {
     isWidgetActive = !isWidgetActive;
+    if (!isWidgetActive) {
+      toolManager.deactivateTool(toolManager.currentTool);
+    }
     console.log(isWidgetActive ? 'Widget Activated' : 'Widget Deactivated');
   }
 
+  // browser specific
   function preventTextSelection() {
     document.body.style.userSelect = 'none';
   }
 
   function restoreTextSelection() {
     document.body.style.userSelect = '';
-  }
-
-  function toCamelCase(str) {
-    return str
-      .replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, (match, index) =>
-        index === 0 ? match.toLowerCase() : match.toUpperCase(),
-      )
-      .replace(/\s+/g, '');
-  }
-
-  function getElementIdentifier(element) {
-    const tag = element.tagName.toLowerCase();
-    const id = element.id ? `#${element.id}` : '';
-    const className = element.classList.length ? `.${[...element.classList].join('.')}` : '';
-    return `${tag}${id}${className}`;
-  }
-
-  function getSelector(element) {
-    if (element.id) {
-      return `//${element.tagName.toLowerCase()}[@id="${element.id}"]`;
-    }
-    if (element.name) {
-      return `//${element.tagName.toLowerCase()}[@name="${element.name}"]`;
-    }
-    if (element.title) {
-      return `//${element.tagName.toLowerCase()}[@title="${element.title}"]`;
-    }
-    if (element.getAttribute('aria-labelledby')) {
-      return `//${element.tagName.toLowerCase()}[@aria-labelledby="${element.getAttribute(
-        'aria-labelledby',
-      )}"]`;
-    }
-    return `//${element.tagName.toLowerCase()}`;
-  }
-
-  function getSuffix(element) {
-    if (element.tagName === 'INPUT') {
-      if (
-        element.type === 'text' ||
-        element.type === 'number' ||
-        element.type === 'email' ||
-        element.type === 'tel' ||
-        element.type === 'password' ||
-        element.type === 'search' ||
-        element.type === 'url'
-      )
-        return 'Textbox';
-      if (element.tagName === 'TEXTAREA') return 'Textbox';
-      if (element.type === 'radio') return 'Radio';
-      if (element.type === 'checkbox') return 'Checkbox';
-      if (element.type === 'button' || element.type === 'submit' || element.type === 'reset')
-        return 'Button';
-    }
-    if (element.tagName === 'SELECT') return 'Select';
-    return '';
-  }
-
-  function getActionType(element) {
-    if (element.tagName === 'INPUT') {
-      if (
-        element.type === 'text' ||
-        element.type === 'number' ||
-        element.type === 'email' ||
-        element.type === 'tel' ||
-        element.type === 'password' ||
-        element.type === 'search' ||
-        element.type === 'url'
-      ) {
-        return 'text'; // Action for text input
-      }
-      if (element.type === 'radio') return 'mark'; // Action for radio button
-      if (element.type === 'checkbox') return 'mark'; // Action for checkbox
-      // if (element.type === 'button' || element.type === 'submit' || element.type === 'reset') {
-      //   return 'click'; // Action for buttons
-      // }
-    }
-    // if (element.tagName === 'BUTTON') {
-    //   return 'click'; // Action for buttons
-    // }
-    if (element.tagName === 'TEXTAREA') return 'text'; // Action for textarea input
-    if (element.tagName === 'SELECT') return 'select'; // Action for select dropdown
-    return 'unknown'; // Return empty if no match found
-  }
-
-  function getElementState(element) {
-    const states = [];
-
-    // Check if the element is hidden by calculating the bounding box
-    const boundingBox = element.getBoundingClientRect();
-    const isHidden = boundingBox.width === 0 && boundingBox.height === 0;
-    if (isHidden) {
-      states.push('hidden');
-    }
-
-    // Check if the element is disabled
-    if (element.disabled) {
-      states.push('disabled');
-    }
-
-    // Check if the element is focused
-    if (document.activeElement === element) {
-      states.push('focused');
-    }
-
-    // Check if the element is "empty" (for input, textarea, or select)
-    if (
-      element.tagName === 'INPUT' ||
-      element.tagName === 'TEXTAREA' ||
-      element.tagName === 'SELECT'
-    ) {
-      if (element.value === '' || element.value === null || element.value === undefined) {
-        states.push('empty');
-      }
-    }
-
-    // Check if the element is checked (for checkboxes or radio buttons)
-    if (element.type === 'checkbox' || element.type === 'radio') {
-      if (element.checked) {
-        states.push('checked');
-      }
-    }
-
-    // Return the joined states, or "normal" if there are no special states
-    return states.length > 0 ? states.join(', ') : 'normal';
-  }
-
-  function isInteractive(element) {
-    return (
-      element.tagName === 'A' ||
-      element.tagName === 'BUTTON' ||
-      element.tagName === 'TEXTAREA' ||
-      element.tagName === 'SELECT' ||
-      (element.tagName === 'INPUT' &&
-        (element.type === 'button' ||
-          element.type === 'submit' ||
-          element.type === 'text' ||
-          element.type === 'password' ||
-          element.type === 'checkbox' ||
-          element.type === 'radio')) ||
-      element.hasAttribute('onclick') ||
-      element.getAttribute('role') === 'button' ||
-      element.tabIndex >= 0
-    );
-  }
-
-  function isElementInSelection(element) {
-    if (popup && popup.contains(element)) {
-      return;
-    }
-    const rect = element.getBoundingClientRect();
-    const selectionRect = selectionBox.getBoundingClientRect();
-
-    return (
-      rect.left >= selectionRect.left &&
-      rect.right <= selectionRect.right &&
-      rect.top >= selectionRect.top &&
-      rect.bottom <= selectionRect.bottom
-    );
   }
 
   function autoScroll(event) {
@@ -1107,49 +1040,230 @@ const popupUtils = (() => {
     clearInterval(scrollInterval);
   }
 
-  function toggleSingleSelectMode() {
-    if (tool !== 'singleSelect') {
-      tool = 'singleSelect';
-      window.addEventListener('click', handleSingleSelect);
-      popupUtils.toggleSingleSelectPopup();
-    } else {
-      tool = '';
-      window.removeEventListener('click', handleSingleSelect);
-      popupUtils.toggleSingleSelectPopup();
-    }
+  // selector specific
+  function toCamelCase(str) {
+    return str
+      .replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, (match, index) =>
+        index === 0 ? match.toLowerCase() : match.toUpperCase()
+      )
+      .replace(/\s+/g, '');
   }
 
-  function handleSingleSelect(event) {
-    if (tool !== 'singleSelect' || (popup && popup.contains(event.target))) return;
-    const element = event.target;
-    if (popupUtils.isValidElement(element)) {
-      selectedElements.set(element, '');
-      element.style.outline = defaultOutlineStyle;
-      console.log('Single Element Selected:', element);
-      popupUtils.attachPopup(element); // Integrate popupUtils for the single select tool
-      createPopup();
-      updatePopup();
+  function getElementIdentifier(element) {
+    const tag = element.tagName.toLowerCase();
+    const id = element.id ? `#${element.id}` : '';
+    const className = element.classList.length
+      ? `.${[...element.classList].join('.')}`
+      : '';
+    return `${tag}${id}${className}`;
+  }
+
+  function getElementState(element) {
+    const states = [];
+
+    // Check if the element is hidden by calculating the bounding box
+    const boundingBox = element.getBoundingClientRect();
+    const isHidden = boundingBox.width === 0 && boundingBox.height === 0;
+    if (isHidden) {
+      states.push('hidden');
+    }
+
+    // Check if the element is disabled
+    if (element.disabled) {
+      states.push('disabled');
+    }
+
+    // Check if the element is focused
+    if (document.activeElement === element) {
+      states.push('focused');
+    }
+
+    // Check if the element is "empty" (for input, textarea, or select)
+    if (
+      element.tagName === 'INPUT' ||
+      element.tagName === 'TEXTAREA' ||
+      element.tagName === 'SELECT'
+    ) {
+      if (
+        element.value === '' ||
+        element.value === null ||
+        element.value === undefined
+      ) {
+        states.push('empty');
+      }
+    }
+
+    // Check if the element is checked (for checkboxes or radio buttons)
+    if (element.type === 'checkbox' || element.type === 'radio') {
+      if (element.checked) {
+        states.push('checked');
+      }
+    }
+
+    // Return the joined states, or "normal" if there are no special states
+    return states.length > 0 ? states.join(', ') : 'normal';
+  }
+
+  function isInteractive(element) {
+    return (
+      element.tagName === 'A' ||
+      element.tagName === 'BUTTON' ||
+      element.tagName === 'TEXTAREA' ||
+      element.tagName === 'SELECT' ||
+      (element.tagName === 'INPUT' &&
+        (element.type === 'button' ||
+          element.type === 'submit' ||
+          element.type === 'text' ||
+          element.type === 'password' ||
+          element.type === 'checkbox' ||
+          element.type === 'radio')) ||
+      element.hasAttribute('onclick') ||
+      element.getAttribute('role') === 'button' ||
+      element.tabIndex >= 0
+    );
+  }
+
+  function isElementInSelection(element) {
+    if (widget && widget.contains(element)) {
+      return;
+    }
+    const rect = element.getBoundingClientRect();
+    const selectionRect = selectionBox.getBoundingClientRect();
+
+    return (
+      rect.left >= selectionRect.left &&
+      rect.right <= selectionRect.right &&
+      rect.top >= selectionRect.top &&
+      rect.bottom <= selectionRect.bottom
+    );
+  }
+
+  function highlightElement(element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    element.style.outline = hoverOutlineStyle;
+  }
+
+  function unhighlightElement(element) {
+    element.style.outline = defaultOutlineStyle;
+  }
+
+  function getSelector(element) {
+    if (element.id) {
+      return `//${element.tagName.toLowerCase()}[@id="${element.id}"]`;
+    }
+    if (element.name) {
+      return `//${element.tagName.toLowerCase()}[@name="${element.name}"]`;
+    }
+    if (element.title) {
+      return `//${element.tagName.toLowerCase()}[@title="${element.title}"]`;
+    }
+    if (element.getAttribute('aria-labelledby')) {
+      return `//${element.tagName.toLowerCase()}[@aria-labelledby="${element.getAttribute(
+        'aria-labelledby'
+      )}"]`;
+    }
+    return `//${element.tagName.toLowerCase()}`;
+  }
+
+  function getSuffix(element) {
+    if (element.tagName === 'INPUT') {
+      if (
+        element.type === 'text' ||
+        element.type === 'number' ||
+        element.type === 'email' ||
+        element.type === 'tel' ||
+        element.type === 'password' ||
+        element.type === 'search' ||
+        element.type === 'url'
+      )
+        return 'Textbox';
+      if (element.tagName === 'TEXTAREA') return 'Textbox';
+      if (element.type === 'radio') return 'Radio';
+      if (element.type === 'checkbox') return 'Checkbox';
+      if (
+        element.type === 'button' ||
+        element.type === 'submit' ||
+        element.type === 'reset'
+      )
+        return 'Button';
+    }
+    if (element.tagName === 'SELECT') return 'Select';
+    return '';
+  }
+
+  function getActionType(element) {
+    if (element.tagName === 'INPUT') {
+      if (
+        element.type === 'text' ||
+        element.type === 'number' ||
+        element.type === 'email' ||
+        element.type === 'tel' ||
+        element.type === 'password' ||
+        element.type === 'search' ||
+        element.type === 'url'
+      ) {
+        return 'text'; // Action for text input
+      }
+      if (element.type === 'radio') return 'mark'; // Action for radio button
+      if (element.type === 'checkbox') return 'mark'; // Action for checkbox
+      // if (element.type === 'button' || element.type === 'submit' || element.type === 'reset') {
+      //   return 'click'; // Action for buttons
+      // }
+    }
+    // if (element.tagName === 'BUTTON') {
+    //   return 'click'; // Action for buttons
+    // }
+    if (element.tagName === 'TEXTAREA') return 'text'; // Action for textarea input
+    if (element.tagName === 'SELECT') return 'select'; // Action for select dropdown
+    return 'unknown'; // Return empty if no match found
+  }
+
+  // tool specific
+  function toggleSingleSelectMode() {
+    if (toolManager.currentTool !== 'singleSelect') {
+      toolManager.activateTool('singleSelect');
+    } else {
+      toolManager.deactivateTool('singleSelect');
     }
   }
 
   function toggleDragSelectMode() {
-    if (tool !== 'dragSelect') {
-      tool = 'dragSelect';
-      window.addEventListener('mousedown', onDragSelectionStart);
+    if (toolManager.currentTool !== 'dragSelect') {
+      toolManager.activateTool('dragSelect');
     } else {
-      tool = '';
-      window.removeEventListener('mousedown', onDragSelectionStart);
+      toolManager.deactivateTool('dragSelect');
     }
   }
 
+  function addSingleElementToSelection(element) {
+    if (
+      toolManager.currentTool !== 'singleSelect' ||
+      (widget && widget.contains(element))
+    )
+      return;
+    if (widgetUtils.isValidElement(element)) {
+      selectedElements.set(element, '');
+      element.style.outline = defaultOutlineStyle;
+      console.log('Single Element Selected:', element);
+      // widgetUtils.attachInspectWidget(element); // Integrate widgetUtils for the single select tool
+      createWidget();
+      updateWidgetContent();
+    }
+  }
+
+  function handleSingleSelect(event) {
+    const element = event.target;
+    addSingleElementToSelection(element);
+  }
+
   function onDragSelectionStart(event) {
-    if (popupContent && popupContent.contains(event.target)) {
+    if (widgetContent && widgetContent.contains(event.target)) {
       return;
     }
-    if (popupTopBar && popupTopBar.contains(event.target)) {
-      isDraggingPopup = true;
-      popupOffsetX = event.clientX - popup.getBoundingClientRect().left;
-      popupOffsetY = event.clientY - popup.getBoundingClientRect().top;
+    if (widgetTopBar && widgetTopBar.contains(event.target)) {
+      isDraggingWidget = true;
+      widgetOffsetX = event.clientX - widget.getBoundingClientRect().left;
+      widgetOffsetY = event.clientY - widget.getBoundingClientRect().top;
 
       window.addEventListener('mousemove', onDragSelectMove);
       window.addEventListener('mouseup', onDragSelectionEnd);
@@ -1168,9 +1282,9 @@ const popupUtils = (() => {
   }
 
   function onDragSelectMove(event) {
-    if (isDraggingPopup) {
-      popup.style.left = `${event.clientX - popupOffsetX}px`;
-      popup.style.top = `${event.clientY - popupOffsetY}px`;
+    if (isDraggingWidget) {
+      widget.style.left = `${event.clientX - widgetOffsetX}px`;
+      widget.style.top = `${event.clientY - widgetOffsetY}px`;
       return;
     }
 
@@ -1185,8 +1299,8 @@ const popupUtils = (() => {
     window.removeEventListener('mousemove', onDragSelectMove);
     window.removeEventListener('mouseup', onDragSelectionEnd);
     stopAutoScroll;
-    if (isDraggingPopup) {
-      isDraggingPopup = false;
+    if (isDraggingWidget) {
+      isDraggingWidget = false;
       return;
     }
 
@@ -1194,10 +1308,10 @@ const popupUtils = (() => {
       isDraggingSelection = false;
 
       const allElements = document.querySelectorAll(
-        'a, button, input, textarea, select, [onclick], [role="button"], [tabindex]',
+        'a, button, input, textarea, select, [onclick], [role="button"], [tabindex]'
       );
 
-      allElements.forEach((element) => {
+      allElements.forEach(element => {
         if (
           isInteractive(element) &&
           isElementInSelection(element) &&
@@ -1212,11 +1326,12 @@ const popupUtils = (() => {
       restoreTextSelection();
       stopAutoScroll();
 
-      createPopup();
-      updatePopup();
+      createWidget();
+      updateWidgetContent();
     }
   }
 
+  // Selection box
   function createSelectionBox() {
     selectionBox = new ElementBuilder('div')
       .setAttributes({ id: 'selection_box' })
@@ -1229,7 +1344,6 @@ const popupUtils = (() => {
       .getElement();
   }
 
-  // Update selection box dimensions during drag select
   function updateSelectionBox(pageX, pageY) {
     const width = Math.abs(pageX - startX);
     const height = Math.abs(pageY - startY);
@@ -1241,153 +1355,92 @@ const popupUtils = (() => {
     });
   }
 
-  function createPopup() {
-    if (popup) {
-      popupContent.innerHTML = '';
+  // Widget
+  function createWidget() {
+    if (widget) {
       return;
     }
 
-    popup = new ElementBuilder('div').setAttributes({ id: 'popup' }).getElement();
-
-    createTopBar(popup);
-    createSecondBar(popup);
-    popupContent = new ElementBuilder('div').addClass('popup-content').appendTo(popup).getElement();
-    createExportButtons(popup);
-    document.body.appendChild(popup);
-  }
-
-  function highlightElement(element) {
-    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    element.style.outline = hoverOutlineStyle;
-  }
-  function unhighlightElement(element) {
-    element.style.outline = defaultOutlineStyle;
-  }
-
-  function updatePopup() {
-    popupContent.innerHTML = '';
-
-    selectedElements.forEach((value, element) => {
-      const li = new ElementBuilder('div')
-        .addClass('selectorListItem')
-        .appendTo(popupContent)
-        .getElement();
-
-      const checkbox = new ElementBuilder('input')
-        .setAttributes({ type: 'checkbox', checked: popupSelectedItems.has(element) })
-        .addClass('popup-item-checkbox')
-        .addEventListener('change', (e) => {
-          let checked = e.target.checked;
-          if (checked) {
-            popupSelectedItems.add(element);
-          } else {
-            popupSelectedItems.delete(element);
-          }
-          updateSelectAllCheckbox();
-          updateDynamicButtons();
-        })
-        .appendTo(li);
-
-      const identifier = getElementIdentifier(element);
-
-      const selectorNameInput = new ElementBuilder('input')
-        .setAttributes({
-          type: 'text',
-          placeholder: 'Enter Key Name',
-          value: value,
-        })
-        .setStyle({ width: '150px' })
-        .addEventListener('blur', (e) => {
-          const val = e.target.value;
-          const suffix = getSuffix(element);
-          const finalSuffix = val.endsWith(suffix) ? '' : suffix;
-          const keyName = toCamelCase(val) + finalSuffix;
-          selectedElements.set(element, keyName);
-        })
-        .appendTo(li);
-
-      new ElementBuilder('span')
-        .addClass('selector-identifier')
-        .addTextContent(identifier)
-        .appendTo(li);
-
-      new ElementBuilder('button')
-        .addTextContent('Delete')
-        .addClass('delete-row-button')
-        .addEventListener('click', () => {
-          selectedElements.delete(element);
-          element.style.outline = '';
-          li.remove();
-        })
-        .appendTo(li);
-
-      li.addEventListener('mouseenter', () => highlightElement(element));
-      li.addEventListener('mouseleave', () => unhighlightElement(element));
-
-      selectorNameInput.addEventListener('focus', () => highlightElement(element));
-      selectorNameInput.addEventListener('blur', () => unhighlightElement(element));
-    });
-  }
-
-  function createTopBar(popup) {
-    popupTopBar = new ElementBuilder('div')
-      .setAttributes({ id: 'popup-top-bar' })
-      .addHTMLContent('<span>Selected Elements</span>')
-      .appendTo(popup)
+    // Create the widget container
+    widget = new ElementBuilder('div')
+      .setAttributes({ id: 'widget' })
       .getElement();
 
-    // Create the Selection container div
+    // Create top bar, second bar, and content
+    createTopBar(widget);
+    createSecondBar(widget);
+    createWidgetContent(widget); // Using the extracted function
+    createExportButtons(widget);
+
+    // Append widget to the body
+    document.body.appendChild(widget);
+  }
+
+  function createTopBar(widget) {
+    const fragment = document.createDocumentFragment();
+
+    // Create widgetTopBar
+    const widgetTopBar = new ElementBuilder('div')
+      .setAttributes({ id: 'widget-top-bar' })
+      .addHTMLContent('<span>Selected Elements</span>')
+      .getElement();
+
+    // Selection Buttons Container
     const selectionButtonsContainer = new ElementBuilder('div')
       .addClass('widget-topbar-action-buttons-container')
-      .appendTo(popupTopBar)
       .getElement();
 
     // Single Select Button
-    new ElementBuilder('button')
-      .addClass('widget-topbar-selection-button', 'widget-topbar-single-select-button')
+    const singleSelectButton = new ElementBuilder('button')
+      .addClass(
+        'widget-topbar-selection-button',
+        'widget-topbar-single-select-button'
+      )
       .addHTMLContent(
-        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" width="100%" height="100%">
-          <rect x="1.6" y="1.5" width="12.6" height="12.7" rx="1" stroke="#000" stroke-width="1.5" fill="currentColor"></rect>
-          <rect x="4" y="4" width="8" height="1.5" rx="0.2" stroke="#000" fill="currentColor"></rect>
-          <rect x="7" y="7" width="8" height="8" fill="currentColor"></rect>
-          <path d="M8 15V8H15M8 8L14 14" stroke="#000" stroke-width="1.5" id="arrow"></path>
-        </svg>`,
+        `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" width="100%" height="100%">
+        <rect x="1.6" y="1.5" width="12.6" height="12.7" rx="1" stroke="#000" stroke-width="1.5" fill="currentColor"></rect>
+        <rect x="4" y="4" width="8" height="1.5" rx="0.2" stroke="#000" fill="currentColor"></rect>
+        <rect x="7" y="7" width="8" height="8" fill="currentColor"></rect>
+        <path d="M8 15V8H15M8 8L14 14" stroke="#000" stroke-width="1.5" id="arrow"></path>
+      </svg>`
       )
       .addEventListener('click', toggleSingleSelectMode)
-      .appendTo(selectionButtonsContainer)
       .getElement();
 
-    // Drag Select Button with ◩
-    new ElementBuilder('button')
-      .addClass('widget-topbar-selection-button', 'widget-topbar-drag-select-button')
+    // Drag Select Button
+    const dragSelectButton = new ElementBuilder('button')
+      .addClass(
+        'widget-topbar-selection-button',
+        'widget-topbar-drag-select-button'
+      )
       .addHTMLContent(
-        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" width="100%" height="100%">
-          <rect x="1.6" y="1.5" width="12.6" height="12.7" rx="1" stroke="#000" stroke-width="1.5" fill="currentColor"></rect>
-          <rect x="4" y="4" width="2" height="2" rx="0.2" fill="#000"></rect>
-          <rect x="7" y="4" width="2" height="2" rx="0.2" fill="#000"></rect>
-          <rect x="10" y="4" width="2" height="2" rx="0.2" fill="#000"></rect>
-          <rect x="4" y="7" width="2" height="2" rx="0.2" fill="#000"></rect>
-          <rect x="4" y="10" width="2" height="2" rx="0.2" fill="#000"></rect>
-          <rect x="7" y="7" width="8" height="8" fill="currentColor"></rect>
-          <path d="M8 15V8H15M8 8L14 14" stroke="#000" stroke-width="1.5" id="arrow"></path>
-        </svg>`,
+        `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" width="100%" height="100%">
+        <rect x="1.6" y="1.5" width="12.6" height="12.7" rx="1" stroke="#000" stroke-width="1.5" fill="currentColor"></rect>
+        <rect x="4" y="4" width="2" height="2" rx="0.2" fill="#000"></rect>
+        <rect x="7" y="4" width="2" height="2" rx="0.2" fill="#000"></rect>
+        <rect x="10" y="4" width="2" height="2" rx="0.2" fill="#000"></rect>
+        <rect x="4" y="7" width="2" height="2" rx="0.2" fill="#000"></rect>
+        <rect x="4" y="10" width="2" height="2" rx="0.2" fill="#000"></rect>
+      </svg>`
       )
       .addEventListener('click', toggleDragSelectMode)
-      .appendTo(selectionButtonsContainer)
       .getElement();
 
-    // Create the Action buttons container div
+    selectionButtonsContainer.append(singleSelectButton, dragSelectButton);
+    widgetTopBar.appendChild(selectionButtonsContainer);
+
+    // Action Buttons Container
     const actionButtonsContainer = new ElementBuilder('div')
       .addClass('widget-topbar-action-buttons-container')
-      .appendTo(popupTopBar)
       .getElement();
 
-    // Minimise button
-    new ElementBuilder('button')
+    // Minimize Button
+    const minimizeButton = new ElementBuilder('button')
       .addClass('widget-topbar-action-button', 'widget-topbar-minimise-button')
       .setAttributes({
         id: ':4i4',
-        src: 'images/cleardot.gif',
         alt: 'Minimise',
         'aria-label': 'Minimise',
         'data-tooltip-delay': '800',
@@ -1395,225 +1448,363 @@ const popupUtils = (() => {
       })
       .addEventListener('click', () => {
         isMinimized = !isMinimized;
-        popupContent.style.display = isMinimized ? 'none' : 'block';
-        popup.style.width = isMinimized ? '328px' : '510px';
+        widgetContent.style.display = isMinimized ? 'none' : 'block';
+        widget.style.width = isMinimized ? '328px' : '510px';
       })
-      .appendTo(actionButtonsContainer)
       .getElement();
 
-    // Create the expand button
-    new ElementBuilder('button')
+    // Expand and Unexpand Buttons
+    const expandButton = new ElementBuilder('button')
       .addClass('widget-topbar-action-button', 'widget-topbar-expand-button')
       .setAttributes({
         id: ':4g4',
-        src: 'images/cleardot.gif',
         alt: 'Pop-out',
         'aria-label': 'Exit full screen (Shift for pop-out)',
         'data-tooltip-delay': '800',
         'data-tooltip': 'Exit full screen (Shift for pop-out)',
       })
+      .addEventListener('click', toggleMaximizeWidget)
       .addEventListener('click', () => {
         expandButton.style.display = 'none';
         unexpandButton.style.display = 'inline-block';
       })
-      .addEventListener('click', toggleMaximizePopup)
-      .appendTo(actionButtonsContainer)
       .getElement();
 
-    // Create the unexpand button
-    new ElementBuilder('button')
+    const unexpandButton = new ElementBuilder('button')
       .addClass('widget-topbar-action-button', 'widget-topbar-unexpand-button')
       .setAttributes({
         id: ':4g4',
-        src: 'images/cleardot.gif',
-        alt: 'Pop-out',
+        alt: 'Full screen',
         'aria-label': 'Full screen (Shift for pop-out)',
         'data-tooltip-delay': '800',
         'data-tooltip': 'Full screen (Shift for pop-out)',
       })
+      .addEventListener('click', toggleMaximizeWidget)
       .addEventListener('click', () => {
         unexpandButton.style.display = 'none';
         expandButton.style.display = 'inline-block';
       })
-      .addEventListener('click', toggleMaximizePopup)
-      .setStyle({ display: 'none' }) // Initially hide the unexpand button
-      .appendTo(actionButtonsContainer)
+      .setStyle({ display: 'none' })
       .getElement();
 
-    // Close button
-    new ElementBuilder('button')
+    // Close Button
+    const closeButton = new ElementBuilder('button')
       .addClass('widget-topbar-action-button', 'widget-topbar-close-button')
       .setAttributes({
         id: ':4g5',
-        src: 'images/cleardot.gif',
         alt: 'Close',
         'aria-label': 'Save & close',
         'data-tooltip-delay': '800',
         'data-tooltip': 'Save & close',
       })
-      .appendTo(actionButtonsContainer)
+      .addEventListener('click', toggleWidgetActivation)
       .getElement();
+
+    actionButtonsContainer.append(
+      minimizeButton,
+      expandButton,
+      unexpandButton,
+      closeButton
+    );
+    widgetTopBar.appendChild(actionButtonsContainer);
+
+    fragment.appendChild(widgetTopBar);
+    widget.appendChild(fragment);
   }
 
-  function createSecondBar(popup) {
-    secondBar = new ElementBuilder('div').addClass('second-bar').appendTo(popup).getElement();
+  function createSecondBar(widget) {
+    const fragment = document.createDocumentFragment();
 
-    new ElementBuilder('input')
-      .setAttributes({ type: 'checkbox', name: 'Select All' })
-      .addEventListener('change', handleSelectAll)
-      .appendTo(secondBar);
-
-    dynamicButtonsContainer = new ElementBuilder('div')
-      .addClass('dynamic-buttons-container')
-      .appendTo(secondBar)
+    // Create second bar container
+    const secondBar = new ElementBuilder('div')
+      .addClass('second-bar')
       .getElement();
 
-    new ElementBuilder('button')
+    // Create "Select All" checkbox
+    const selectAllCheckbox = new ElementBuilder('input')
+      .setAttributes({ type: 'checkbox', name: 'Select All' })
+      .addEventListener('change', handleSelectAll)
+      .getElement();
+
+    // Create dynamic buttons container
+    dynamicButtonsContainer = new ElementBuilder('div')
+      .addClass('dynamic-buttons-container')
+      .getElement();
+
+    // Create Settings button
+    const settingsButton = new ElementBuilder('button')
       .addTextContent('⚙️')
       .setAttributes({ name: 'Settings' })
       .setStyle({ border: 'none', cursor: 'pointer' })
       .addEventListener('click', toggleSettingsOverlay)
-      .appendTo(secondBar);
-  }
-
-  // Button to toggle the export modal
-  function createExportButtons(popup) {
-    const buttonContainer = new ElementBuilder('div')
-      .addClass('export-buttons-container')
-      .appendTo(popup)
       .getElement();
 
-    // Button for Selectors
-    new ElementBuilder('button')
-      .addTextContent('Selectors ↗️')
-      .addClass('exportButton exportSelectorButton')
-      .addEventListener('click', () => toggleExportOverlay('selectors'))
-      .appendTo(buttonContainer);
+    // Append all elements to second bar
+    secondBar.append(
+      selectAllCheckbox,
+      dynamicButtonsContainer,
+      settingsButton
+    );
 
-    // Button for Data
-    new ElementBuilder('button')
-      .addTextContent('Data ↗️')
-      .addClass('exportButton exportDataButton')
-      .addEventListener('click', () => toggleExportOverlay('data'))
-      .appendTo(buttonContainer);
+    // Append second bar to fragment and then to the widget
+    fragment.appendChild(secondBar);
+    widget.appendChild(fragment);
+  }
 
-    // Button for Actions
-    new ElementBuilder('button')
-      .addTextContent('Actions ↗️')
-      .addClass('exportButton exportActionButton')
-      .addEventListener('click', () => toggleExportOverlay('actions'))
-      .appendTo(buttonContainer);
+  // Extracted function to create widget content
+  function createWidgetContent(parent) {
+    if (widgetContent) return;
+    widgetContent = new ElementBuilder('div')
+      .addClass('widget-content')
+      .appendTo(parent)
+      .getElement();
 
-    // Button for Assertions
+    updateWidgetContent();
+    parent.appendChild(widgetContent);
+  }
+
+  function createListItem(element, value) {
+    const li = document.createDocumentFragment();
+
+    // Create list item container
+    const itemContainer = new ElementBuilder('div')
+      .addClass('selectorListItem')
+      .appendTo(li)
+      .getElement();
+
+    // Checkbox for selection
+    new ElementBuilder('input')
+      .setAttributes({
+        type: 'checkbox',
+        checked: widgetSelectedItems.has(element),
+      })
+      .addClass('widget-item-checkbox')
+      .addEventListener('change', e => {
+        const checked = e.target.checked;
+        if (checked) {
+          widgetSelectedItems.add(element);
+        } else {
+          widgetSelectedItems.delete(element);
+        }
+        updateSelectAllCheckbox();
+        updateDynamicButtons();
+      })
+      .appendTo(itemContainer);
+
+    // Input for the selector name
+    const selectorNameInput = new ElementBuilder('input')
+      .setAttributes({
+        type: 'text',
+        placeholder: 'Enter Key Name',
+        value: value,
+      })
+      .setStyle({ width: '150px' })
+      .addEventListener('blur', e => {
+        const val = e.target.value;
+        const suffix = getSuffix(element);
+        const finalSuffix = val.endsWith(suffix) ? '' : suffix;
+        const keyName = toCamelCase(val) + finalSuffix;
+        selectedElements.set(element, keyName);
+      })
+      .appendTo(itemContainer);
+
+    // Element identifier
+    new ElementBuilder('span')
+      .addClass('selector-identifier')
+      .addTextContent(getElementIdentifier(element))
+      .appendTo(itemContainer);
+
+    // Delete button
     new ElementBuilder('button')
-      .addTextContent('Assertions ↗️')
-      .addClass('exportButton exportAssertionsButton')
-      .addEventListener('click', () => toggleExportOverlay('assertions'))
-      .appendTo(buttonContainer);
+      .addTextContent('Delete')
+      .addClass('delete-row-button')
+      .addEventListener('click', () => {
+        deleteListItem(element, itemContainer);
+      })
+      .appendTo(itemContainer);
+
+    // Hover and focus listeners to highlight the element
+    itemContainer.addEventListener('mouseenter', () =>
+      highlightElement(element)
+    );
+    itemContainer.addEventListener('mouseleave', () =>
+      unhighlightElement(element)
+    );
+    selectorNameInput.addEventListener('focus', () =>
+      highlightElement(element)
+    );
+    selectorNameInput.addEventListener('blur', () =>
+      unhighlightElement(element)
+    );
+
+    return li;
+  }
+
+  function addListItem(element, value) {
+    const listItem = createListItem(element, value);
+    widgetContentFragment.appendChild(listItem);
+  }
+
+  function deleteListItem(element, itemContainer) {
+    selectedElements.delete(element);
+    element.style.outline = '';
+    itemContainer.remove();
+  }
+
+  function updateWidgetContent() {
+    widgetContent.innerHTML = '';
+    widgetContentFragment = document.createDocumentFragment();
+
+    selectedElements.forEach((value, element) => {
+      addListItem(element, value);
+    });
+
+    widgetContent.appendChild(widgetContentFragment);
+  }
+
+  function createExportButtons(widget) {
+    const fragment = document.createDocumentFragment();
+
+    // Create the button container
+    const buttonContainer = new ElementBuilder('div')
+      .addClass('export-buttons-container')
+      .getElement();
+
+    // Helper function to create export buttons
+    const createButton = (text, className, exportType) => {
+      return new ElementBuilder('button')
+        .addTextContent(`${text} ↗️`)
+        .addClass('exportButton', className)
+        .addEventListener('click', () => toggleExportOverlay(exportType))
+        .getElement();
+    };
+
+    // Create and append all export buttons
+    buttonContainer.append(
+      createButton('Selectors', 'exportSelectorButton', 'selectors'),
+      createButton('Data', 'exportDataButton', 'data'),
+      createButton('Actions', 'exportActionButton', 'actions'),
+      createButton('Assertions', 'exportAssertionsButton', 'assertions')
+    );
+
+    // Append the button container to the fragment and then to the widget
+    fragment.appendChild(buttonContainer);
+    widget.appendChild(fragment);
+  }
+
+  function toggleMaximizeWidget() {
+    isMaximized = !isMaximized;
+    if (isMaximized) {
+      widget.style.position = 'fixed';
+      widget.style.top = 0;
+      widget.style.left = 0;
+      widget.style.width = '100vw';
+      widget.style.height = '100vh';
+      widget.style.zIndex = 10001; // Ensure it's on top of everything
+      widgetContent.style.maxHeight = '90vh';
+    } else {
+      widget.style.position = 'fixed';
+      widget.style.bottom = '10px';
+      widget.style.right = '10px';
+      widget.style.width = '400px';
+      widget.style.height = 'auto';
+      widgetContent.style.maxHeight = '100vh';
+    }
   }
 
   function handleSelectAll(event) {
     const isChecked = event.target.checked;
-    popupSelectedItems.clear();
+    widgetSelectedItems.clear();
     if (isChecked) {
       selectedElements.forEach((_, key) => {
-        popupSelectedItems.add(key);
+        widgetSelectedItems.add(key);
       });
     }
 
     updateDynamicButtons();
   }
 
-  function toggleMaximizePopup() {
-    isMaximized = !isMaximized;
-    if (isMaximized) {
-      popup.style.position = 'fixed';
-      popup.style.top = 0;
-      popup.style.left = 0;
-      popup.style.width = '100vw';
-      popup.style.height = '100vh';
-      popup.style.zIndex = 10001; // Ensure it's on top of everything
-      popupContent.style.maxHeight = '90vh';
-    } else {
-      popup.style.position = 'fixed';
-      popup.style.bottom = '10px';
-      popup.style.right = '10px';
-      popup.style.width = '400px';
-      popup.style.height = 'auto';
-      popupContent.style.maxHeight = '300px';
-    }
-  }
-
   function updateSelectAllCheckbox() {
     const selectedItemsSize = selectedElements.size;
-    const popupSelectedItemsSize = popupSelectedItems.size;
+    const widgetSelectedItemsSize = widgetSelectedItems.size;
     const selectAllCheckbox = secondBar.querySelector('input[type="checkbox"]');
-    selectAllCheckbox.checked = popupSelectedItemsSize === selectedItemsSize;
+    selectAllCheckbox.checked = widgetSelectedItemsSize === selectedItemsSize;
     selectAllCheckbox.indeterminate =
-      popupSelectedItemsSize > 0 && popupSelectedItemsSize < selectedItemsSize;
+      widgetSelectedItemsSize > 0 &&
+      widgetSelectedItemsSize < selectedItemsSize;
   }
 
   function updateDynamicButtons() {
+    // Helper function to create a button and append to fragment
+
+    const createButton = (text, className, eventHandler, fragment) => {
+      new ElementBuilder('button')
+        .addTextContent(text)
+        .addClass(className)
+        .addEventListener('click', eventHandler)
+        .appendTo(fragment);
+    };
+
+    // Handle copying selected elements to clipboard
     const handleCopy = () => {
       const exportData = {};
-      popupSelectedItems.size < 1
-        ? selectedElements.forEach((selectorName, element) => {
-            exportData[selectorName] = getSelector(element);
-          })
-        : popupSelectedItems.forEach((element) => {
-            exportData[selectedElements.get(element)] = getSelector(element);
-          });
+      const source =
+        widgetSelectedItems.size < 1 ? selectedElements : widgetSelectedItems;
+
+      source.forEach((value, element) => {
+        const selectorName = selectedElements.get(element) || value;
+        exportData[selectorName] = getSelector(element);
+      });
+
       console.log('Copied Data:', exportData);
       navigator.clipboard.writeText(JSON.stringify(exportData));
     };
 
+    // Handle deletion of selected items
     const handleDeleteAll = () => {
-      let newSelectedElements = new Map();
-      selectedElements.forEach((value, element) => {
-        if (!popupSelectedItems.has(element)) {
-          newSelectedElements.set(element, value);
-        } else {
-          element.style.outline = '';
-        }
-      });
-      selectedElements = newSelectedElements;
-      popupSelectedItems.clear();
-      updatePopup();
+      selectedElements = new Map(
+        [...selectedElements].filter(([element]) => {
+          if (widgetSelectedItems.has(element)) {
+            element.style.outline = '';
+            return false;
+          }
+          return true;
+        })
+      );
+      widgetSelectedItems.clear();
+      updateWidgetContent();
     };
 
+    // Handle grouping selected items
     const handleGroup = () => {
       const groupName = prompt('Enter Group Name:');
       if (groupName) {
-        popupSelectedItems.forEach((element) => {
-          selectedElements.set(element, groupName);
-        });
-        updatePopup();
+        widgetSelectedItems.forEach(element =>
+          selectedElements.set(element, groupName)
+        );
+        updateWidgetContent();
         updateDynamicButtons();
       }
     };
 
+    // Clear dynamic buttons container
     dynamicButtonsContainer.innerHTML = '';
-    if (popupSelectedItems.size > 0) {
-      new ElementBuilder('button')
-        .addTextContent('Delete All')
-        .addClass('delete-button')
-        .addEventListener('click', handleDeleteAll)
-        .appendTo(dynamicButtonsContainer);
 
-      new ElementBuilder('button')
-        .addTextContent('Copy')
-        .addClass('copy-button')
-        .addEventListener('click', handleCopy)
-        .appendTo(dynamicButtonsContainer);
+    // Create a DocumentFragment to batch DOM updates
+    const fragment = document.createDocumentFragment();
 
-      new ElementBuilder('button')
-        .addTextContent('Group')
-        .addClass('group-button')
-        .addEventListener('click', handleGroup)
-        .appendTo(dynamicButtonsContainer);
+    // Add buttons to the fragment if there are selected items
+    if (widgetSelectedItems.size > 0) {
+      createButton('Delete All', 'delete-button', handleDeleteAll, fragment);
+      createButton('Copy', 'copy-button', handleCopy, fragment);
+      createButton('Group', 'group-button', handleGroup, fragment);
     }
+
+    // Append the fragment to the dynamic buttons container
+    dynamicButtonsContainer.appendChild(fragment);
   }
 
+  // export functions
   function exportSelectors() {
     const exportSelectorsObject = {};
     selectedElements.forEach((keyName, element) => {
@@ -1695,85 +1886,25 @@ const popupUtils = (() => {
   function formatTable(rows) {
     // Find the maximum width for each column
     const colWidths = rows[0].map((_, colIndex) =>
-      Math.max(...rows.map((row) => row[colIndex].length)),
+      Math.max(...rows.map(row => row[colIndex].length))
     );
 
     // Format each row to align the columns with pipes at the start and end
     return rows
       .map(
-        (row) =>
-          '| ' + row.map((cell, colIndex) => cell.padEnd(colWidths[colIndex])).join(' | ') + ' |',
+        row =>
+          '| ' +
+          row
+            .map((cell, colIndex) => String(cell).padEnd(colWidths[colIndex]))
+            .join(' | ') +
+          ' |'
       )
       .join('\n');
   }
 
-  function toggleSettingsOverlay() {
-    let settingsOverlay = document.getElementById('settings-overlay');
-    if (!settingsOverlay) {
-      settingsOverlay = new ElementBuilder('div')
-        .setAttributes({ id: 'settings-overlay' })
-        .appendTo(document.body)
-        .getElement();
-
-      const settingsContainer = new ElementBuilder('div')
-        .setAttributes({ id: 'settings-container' })
-        .appendTo(settingsOverlay)
-        .getElement();
-
-      new ElementBuilder('button')
-        .addTextContent('Close')
-        .addEventListener('click', toggleSettingsOverlay)
-        .appendTo(settingsContainer);
-
-      new ElementBuilder('label')
-        .addTextContent('Sort/Filter Elements by:')
-        .setStyle({ display: 'block', marginBottom: '10px' })
-        .appendTo(settingsContainer);
-
-      new ElementBuilder('select')
-        .addHTMLContent(
-          `
-          <option value="visible">Visible</option>
-          <option value="hidden">Hidden</option>
-          <option value="disabled">Disabled</option>
-          <option value="focusable">Focusable</option>
-        `,
-        )
-        .appendTo(settingsContainer);
-
-      new ElementBuilder('select')
-        .addHTMLContent(
-          `
-          <option value="visible">Visible</option>
-          <option value="hidden">Hidden</option>
-          <option value="disabled">Disabled</option>
-          <option value="focusable">Focusable</option>
-          <option value="focusable">Inside iframe</option>
-          <option value="focusable">Inside shadow dom</option>
-          <option value="focusable">Inside iframe or shadow dom</option>
-        `,
-        )
-        .appendTo(settingsContainer);
-
-      new ElementBuilder('div')
-        .addHTMLContent(
-          `
-          <ul>
-          <li>Show the sorting button in the </li>
-          <li>Show the jsonviewer and editor</li>
-          <li>Export to file or console when exporting</li>
-          </ul>
-        `,
-        )
-        .appendTo(settingsContainer);
-    }
-
-    settingsOverlay.style.display =
-      settingsOverlay.style.display === 'none' || !settingsOverlay.style.display ? 'flex' : 'none';
-  }
-
+  // export modal
   function toggleExportOverlay(contentType) {
-    let exportOverlay = document.getElementById('export-overlay');
+    exportOverlay = document.getElementById('export-overlay');
     let fileName;
     let copyButton;
 
@@ -1830,7 +1961,8 @@ const popupUtils = (() => {
 
           // Function to download the content as JSON
           const downloadObjectAsJson = (exportObj, exportName) => {
-            const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(exportObj);
+            const dataStr =
+              'data:text/json;charset=utf-8,' + encodeURIComponent(exportObj);
             const downloadAnchorNode = document.createElement('a');
             downloadAnchorNode.setAttribute('href', dataStr);
             downloadAnchorNode.setAttribute('download', exportName);
@@ -1877,7 +2009,7 @@ const popupUtils = (() => {
                 copyButton.classList.remove('copied');
               }, 1000); // Revert back to "Copy" after 500ms
             })
-            .catch((err) => {
+            .catch(err => {
               console.error('Failed to copy text: ', err);
             });
         })
@@ -1915,13 +2047,88 @@ const popupUtils = (() => {
     exportOverlay.style.display = 'flex';
   }
 
+  // Settings modal
+  function toggleSettingsOverlay() {
+    let settingsOverlay = document.getElementById('settings-overlay');
+    if (!settingsOverlay) {
+      settingsOverlay = new ElementBuilder('div')
+        .setAttributes({ id: 'settings-overlay' })
+        .appendTo(document.body)
+        .getElement();
+
+      const settingsContainer = new ElementBuilder('div')
+        .setAttributes({ id: 'settings-container' })
+        .appendTo(settingsOverlay)
+        .getElement();
+
+      new ElementBuilder('button')
+        .addTextContent('Close')
+        .addEventListener('click', toggleSettingsOverlay)
+        .appendTo(settingsContainer);
+
+      new ElementBuilder('label')
+        .addTextContent('Sort/Filter Elements by:')
+        .setStyle({ display: 'block', marginBottom: '10px' })
+        .appendTo(settingsContainer);
+
+      new ElementBuilder('select')
+        .addHTMLContent(
+          `
+          <option value="visible">Visible</option>
+          <option value="hidden">Hidden</option>
+          <option value="disabled">Disabled</option>
+          <option value="focusable">Focusable</option>
+        `
+        )
+        .appendTo(settingsContainer);
+
+      new ElementBuilder('select')
+        .addHTMLContent(
+          `
+          <option value="visible">Visible</option>
+          <option value="hidden">Hidden</option>
+          <option value="disabled">Disabled</option>
+          <option value="focusable">Focusable</option>
+          <option value="focusable">Inside iframe</option>
+          <option value="focusable">Inside shadow dom</option>
+          <option value="focusable">Inside iframe or shadow dom</option>
+        `
+        )
+        .appendTo(settingsContainer);
+
+      new ElementBuilder('div')
+        .addHTMLContent(
+          `
+          <ul>
+          <li>Show the sorting button in the </li>
+          <li>Show the jsonviewer and editor</li>
+          <li>Export to file or console when exporting</li>
+          </ul>
+        `
+        )
+        .appendTo(settingsContainer);
+    }
+
+    settingsOverlay.style.display =
+      settingsOverlay.style.display === 'none' || !settingsOverlay.style.display
+        ? 'flex'
+        : 'none';
+  }
+
   // Add keyboard listeners for activating/deactivating the widget
   function addKeyboardShortcuts() {
-    window.addEventListener('keydown', (e) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'H') {
-        toggleWidgetActivation();
-      }
-    });
+    window.addEventListener('keydown', handleKeydown);
+  }
+
+  // Remove keyboard listeners for activating/deactivating the widget
+  function removeKeyboardShortcuts() {
+    window.removeEventListener('keydown', handleKeydown);
+  }
+
+  function handleKeydown(e) {
+    if (e.ctrlKey && e.shiftKey && e.key === 'H') {
+      toggleWidgetActivation();
+    }
   }
 
   // Initialize the widget with drag select as the default tool
@@ -1930,7 +2137,7 @@ const popupUtils = (() => {
     toggleDragSelectMode(); // Default to drag select
     addKeyboardShortcuts();
     console.log(
-      'Hold and drag the mouse to select interactive elements. A popup will show the selected items.',
+      'Hold and drag the mouse to select interactive elements. A widget will show the selected items.'
     );
   }
 
