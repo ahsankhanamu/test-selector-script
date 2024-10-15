@@ -4,14 +4,14 @@ class ElementBuilder {
   }
 
   setAttributes(attributes) {
-    Object.keys(attributes).forEach((key) => {
+    Object.keys(attributes).forEach(key => {
       this.element.setAttribute(key, attributes[key]);
     });
     return this; // for chaining
   }
 
   addClass(...classNames) {
-    classNames.forEach((className) => {
+    classNames.forEach(className => {
       this.element.classList.add(...className.split(' ')); // Split by space
     });
     return this; // for chaining
@@ -28,7 +28,8 @@ class ElementBuilder {
   }
 
   appendTo(parent) {
-    if (parent instanceof HTMLElement) {
+    // Check if parent is an HTMLElement or DocumentFragment
+    if (parent instanceof HTMLElement || parent instanceof DocumentFragment) {
       parent.appendChild(this.element);
     } else if (typeof parent === 'string') {
       document.querySelector(parent).appendChild(this.element);
@@ -40,7 +41,9 @@ class ElementBuilder {
     if (target instanceof HTMLElement) {
       target.insertAdjacentElement(position, this.element);
     } else if (typeof target === 'string') {
-      document.querySelector(target).insertAdjacentElement(position, this.element);
+      document
+        .querySelector(target)
+        .insertAdjacentElement(position, this.element);
     }
     return this; // for chaining
   }
@@ -60,17 +63,6 @@ class ElementBuilder {
   }
 }
 
-// Function to download the object as a JSON file
-function downloadObjectAsJson(exportObj, exportName) {
-  const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(exportObj));
-  const downloadAnchorNode = document.createElement('a');
-  downloadAnchorNode.setAttribute('href', dataStr);
-  downloadAnchorNode.setAttribute('download', exportName + '.json');
-  document.body.appendChild(downloadAnchorNode); // required for firefox
-  downloadAnchorNode.click();
-  downloadAnchorNode.remove();
-}
-
 const cssString = `
   /* Selection box styling */
     .selection-box {
@@ -83,8 +75,8 @@ const cssString = `
       display: none;
     }
 
-    /* Popup styling */
-    #popup {
+    /* Widget styling */
+    #widget {
       position: fixed;
       bottom: 10px;
       right: 10px;
@@ -99,8 +91,8 @@ const cssString = `
       flex-direction: column;
     }
 
-    /* Popup top bar styling */
-    #popup-top-bar {
+    /* Widget top bar styling */
+    #widget-top-bar {
       color: white;
       background-color: #f2f2f2;
       box-shadow: 0 3px 2px -2px rgba(0, 0, 0, .1);
@@ -114,8 +106,8 @@ const cssString = `
       border-top-right-radius: 8px;
     }
 
-    /* Popup content area styling */
-    .popup-content {
+    /* Widget content area styling */
+    .widget-content {
       padding: 10px;
       flex-grow: 1;
       max-height: 300px;
@@ -189,7 +181,7 @@ const cssString = `
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
     }
 
-    #popup {
+    #widget {
       position: fixed;
       bottom: 10px;
       right: 10px;
@@ -224,7 +216,7 @@ const cssString = `
       font-size: 16px;
     }
 
-    .popup-content {
+    .widget-content {
       padding: 10px;
       flex-grow: 1;
       max-height: 300px;
@@ -233,8 +225,8 @@ const cssString = `
       border-bottom-left-radius: 8px;
       border-bottom-right-radius: 8px;
     }
-
-    .button-container {
+      
+    .export-buttons-container {
       display: flex;
       justify-content: space-between;
       padding: 10px;
@@ -242,17 +234,7 @@ const cssString = `
       border-bottom-left-radius: 8px;
       border-bottom-right-radius: 8px;
     }
-
-    .selectorListItem {
-      padding: 5px;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #ccc;
-    }
-
-    .exportSelectorButton {
+    .exportButton {
       padding: 5px 10px;
       border: none;
       background-color: #007bff;
@@ -260,16 +242,129 @@ const cssString = `
       border-radius: 5px;
       cursor: pointer;
     }
-
-    .exportDataButton {
-      padding: 5px 10px;
-      border: none;
-      background-color: #28a745;
+    
+    .exportSelectorButton {
+      background-color: #4CAF50;
       color: white;
-      border-radius: 5px;
-      cursor: pointer;
     }
 
+    .exportDataButton {
+      background-color: #2196F3;
+      color: white;
+    }
+    
+    .exportActionButton {
+      background-color: #FFC107;
+      color: white;
+    }
+
+    .exportAssertionButton {
+      background-color: #FF5722;
+      color: white;
+    }
+
+    /* Overlay styling */
+    #export-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10001;
+    }
+
+    /* Container styling */
+    #export-container {
+      background-color: #fff;
+      width: 80%;
+      max-height: 100%;
+      padding: 20px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Close button styling */
+    .export-close-button {
+      background-color: #f44336;
+      color: #fff;
+      border: none;
+      padding: 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      align-self: flex-end;
+    }
+    
+    /* Copy button positioned at the right top corner of the textarea */
+    .copy-text-area-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #2196f3;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .copy-text-area-button:active {
+      transform: scale(0.95);
+    }
+
+    /* Animation for the button when text changes */
+    .copy-text-area-button.copied {
+      background-color: #4caf50;
+      transition: background-color 0.3s ease;
+    }
+
+    /* Input for file name */
+    #export-filename {
+      border: 1px solid #ccc;
+      padding: 8px;
+      font-size: 14px;
+      border-radius: 4px;
+      width: 50%;
+      outline: none;
+      margin-bottom: 10px;
+    }
+
+    /* Export button styling */
+    .export-json-button {
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-top: 10px;
+      margin-left: 10px;
+    }
+
+
+    /* Textarea styling */
+    #export-textarea {
+      width: 100%;
+      height: 70vh;
+      padding: 10px;
+      font-size: 14px;
+      font-family: monospace;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      resize: none;
+      background-color: #f9f9f9;
+      white-space: pre;
+      overflow: auto;
+    }
+    
     .selector-identifier {
       color: #747775;
       margin-left: 10px;
@@ -281,6 +376,16 @@ const cssString = `
     /* Limit the width for ellipsis to show */
     }
 
+        
+    .selectorListItem {
+      padding: 5px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #ccc;
+    }
+
     .delete-row-button {
       margin-left: 10px;
       border: none;
@@ -290,8 +395,8 @@ const cssString = `
       cursor: pointer;
     }
 
-    //popup action buttons
-    .widget-topbar-action-buttons-container{
+    /* widget action buttons */
+    .widget-topbar-action-buttons-container {
         display: flex;
         text-align: right;
         white-space: nowrap;
@@ -345,6 +450,7 @@ const cssString = `
         width: 16px;
         height: 16px;
     }
+    
     .widget-topbar-close-button {
         background: url(//ssl.gstatic.com/ui/v1/icons/mail/rfr/ic_close_16px_2x.png);
         background-size: 16px;
