@@ -1,0 +1,14 @@
+{
+  "name": "widgetscript",
+  "version": "1.0.0",
+  "main": ".",
+  "scripts": {
+    "build": "",
+    "watch-and-combine": "node watchAndCombine.js",
+    "start": "node watch-and-combine"
+  },
+  "keywords": [],
+  "author": "Ahsan Khan",
+  "license": "ISC",
+  "description": ""
+}
